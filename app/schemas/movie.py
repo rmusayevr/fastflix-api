@@ -12,7 +12,7 @@ class MovieCreate(MovieBase):
     pass
 
 
-class Movie(MovieBase):
+class MovieResponse(MovieBase):
     id: int
 
     class Config:
