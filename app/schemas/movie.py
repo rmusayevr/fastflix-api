@@ -12,6 +12,12 @@ class MovieCreate(MovieBase):
     pass
 
 
+class MovieUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1)
+    director: str | None = Field(default=None, min_length=1)
+    description: str | None = None
+
+
 class MovieResponse(MovieBase):
     id: int
 
