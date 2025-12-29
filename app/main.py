@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.core.config import settings
+from app.api.v1.router import api_router
 
 
 def create_application() -> FastAPI:
@@ -8,8 +9,11 @@ def create_application() -> FastAPI:
         version="1.0.0",
         docs_url="/docs" if settings.ENVIRONMENT != "prod" else None,
     )
+    
+    application.include_router(api_router, prefix=settings.API_V1_STR)
 
     return application
+
 
 app = create_application()
 
