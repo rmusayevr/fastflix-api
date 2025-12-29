@@ -1,10 +1,8 @@
-from typing import Generator, List, Dict, Any
-from app.db.session import MOVIE_DATABASE
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import AsyncSessionLocal
 
 
-def get_db() -> Generator[List[Dict[str, Any]], None, None]:
-    try:
-        db = MOVIE_DATABASE
-        yield db
-    finally:
-        pass
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        yield session
