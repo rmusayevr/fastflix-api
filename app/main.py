@@ -9,7 +9,7 @@ def create_application() -> FastAPI:
         version="1.0.0",
         docs_url="/docs" if settings.ENVIRONMENT != "prod" else None,
     )
-    
+
     application.include_router(api_router, prefix=settings.API_V1_STR)
 
     return application

@@ -11,3 +11,15 @@ A progressive backend engineering project to build a production-grade Movie Reco
 - **Framework:** FastAPI
 - **Validation:** Pydantic
 - **Database:** SQLite (Phase 1) -> PostgreSQL (Phase 2)
+
+## 🚀 Progress: Phase 1 (The Foundation) - COMPLETED
+- [x] **Project Structure:** Domain-driven layout (`api/`, `core/`, `services/`).
+- [x] **Configuration:** Type-safe settings with Pydantic.
+- [x] **Routing:** Modular `APIRouter` implementation.
+- [x] **Validation:** Strict Pydantic schemas (Input vs Output models).
+- [x] **Architecture:** Dependency Injection and Service Layer pattern.
+
+## 🔜 Next Up: Phase 2 (Persistence)
+- Integrating **PostgreSQL**.
+- Managing Migrations with **Alembic**.
+- Implementing **JWT Authentication**.
