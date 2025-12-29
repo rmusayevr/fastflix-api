@@ -1,22 +1,14 @@
-from typing import List, Dict, Any
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from app.core.config import settings
 
-MOVIE_DATABASE: List[Dict[str, Any]] = [
-    {
-        "id": 1,
-        "title": "Dead Poets Society",
-        "director": "Peter Weir",
-        "description": "A teacher inspires his students to think for themselves.",
-    },
-    {
-        "id": 2,
-        "title": "Midnight in Paris",
-        "director": "Woody Allen",
-        "description": "A man travels back in time to the 1920s.",
-    },
-    {
-        "id": 3,
-        "title": "The Prestige",
-        "director": "Christopher Nolan",
-        "description": "A story about two magicians and their rivalry.",
-    },
-]
+engine = create_async_engine(
+    settings.DATABASE_URL,
+    echo=True,
+)
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+)
