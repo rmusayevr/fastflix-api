@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_db, get_current_user
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserResponse
 from app.services.user_service import register_user_service, authenticate_user_service
 from app.core.security import create_access_token
+from app.models.user import UserModel
 
 router = APIRouter()
 
@@ -36,3 +37,12 @@ async def login_for_access_token(
 
     access_token = create_access_token(subject=user.id)
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user: UserModel = Depends(get_current_user)):
+    """
+    Fetch the current logged-in user.
+    This route is protected.
+    """
+    return current_user

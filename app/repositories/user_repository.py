@@ -21,3 +21,8 @@ class UserRepository:
         await self.session.commit()
         await self.session.refresh(user)
         return user
+
+    async def get_by_id(self, user_id: int) -> UserModel | None:
+        query = select(UserModel).where(UserModel.id == user_id)
+        result = await self.session.execute(query)
+        return result.scalars().first()
