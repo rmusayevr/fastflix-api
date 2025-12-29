@@ -28,24 +28,16 @@ async def create_movie(movie: MovieCreate, db: AsyncSession = Depends(get_db)):
 
 @router.get("/{movie_id}", response_model=MovieResponse)
 async def read_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
-    movie = await get_movie_by_id_service(movie_id, db)
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
-    return movie
+    return await get_movie_by_id_service(movie_id, db)
 
 
 @router.patch("/{movie_id}", response_model=MovieResponse)
 async def update_movie(
     movie_id: int, movie_in: MovieUpdate, db: AsyncSession = Depends(get_db)
 ):
-    updated_movie = await update_movie_service(movie_id, movie_in, db)
-    if not updated_movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
-    return updated_movie
+    return await update_movie_service(movie_id, movie_in, db)
 
 
 @router.delete("/{movie_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
-    deleted = await delete_movie_service(movie_id, db)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Movie not found")
+    await delete_movie_service(movie_id, db)

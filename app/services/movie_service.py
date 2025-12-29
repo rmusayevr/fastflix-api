@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.movie import MovieCreate
+from typing import List
+
 from app.models.movie import MovieModel
-from app.schemas.movie import MovieUpdate
+from app.schemas.movie import MovieCreate, MovieUpdate
 from app.repositories.movie_repository import MovieRepository
+from app.core.exceptions import MovieNotFoundException
 
 
 async def create_movie_service(movie: MovieCreate, db: AsyncSession) -> MovieModel:
@@ -10,32 +12,38 @@ async def create_movie_service(movie: MovieCreate, db: AsyncSession) -> MovieMod
     return await repo.create_movie(movie)
 
 
-async def get_all_movies_service(db: AsyncSession) -> list[MovieModel]:
+async def get_all_movies_service(db: AsyncSession) -> List[MovieModel]:
     repo = MovieRepository(db)
     return await repo.get_all_movies()
 
 
-async def get_movie_by_id_service(movie_id: int, db: AsyncSession) -> MovieModel | None:
+async def get_movie_by_id_service(movie_id: int, db: AsyncSession) -> MovieModel:
     repo = MovieRepository(db)
-    return await repo.get_by_id(movie_id)
+    movie = await repo.get_by_id(movie_id)
+
+    if not movie:
+        raise MovieNotFoundException(movie_id)
+
+    return movie
 
 
 async def update_movie_service(
     movie_id: int, update_data: MovieUpdate, db: AsyncSession
-) -> MovieModel | None:
+) -> MovieModel:
     repo = MovieRepository(db)
+
     movie = await repo.get_by_id(movie_id)
     if not movie:
-        return None
+        raise MovieNotFoundException(movie_id)
 
     return await repo.update_movie(movie, update_data)
 
 
-async def delete_movie_service(movie_id: int, db: AsyncSession) -> bool:
+async def delete_movie_service(movie_id: int, db: AsyncSession) -> None:
     repo = MovieRepository(db)
+
     movie = await repo.get_by_id(movie_id)
     if not movie:
-        return False
+        raise MovieNotFoundException(movie_id)
 
     await repo.delete_movie(movie)
-    return True

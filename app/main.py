@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.api.v1.router import api_router
+from app.core.exceptions import MovieNotFoundException
 
 
 def create_application() -> FastAPI:
@@ -16,6 +18,13 @@ def create_application() -> FastAPI:
 
 
 app = create_application()
+
+
+@app.exception_handler(MovieNotFoundException)
+async def movie_not_found_handler(request: Request, exc: MovieNotFoundException):
+    return JSONResponse(
+        status_code=404, content={"error": "Not Found", "detail": exc.message}
+    )
 
 
 @app.get("/health")
