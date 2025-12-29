@@ -19,7 +19,8 @@ A progressive backend engineering project to build a production-grade Movie Reco
 - [x] **Validation:** Strict Pydantic schemas (Input vs Output models).
 - [x] **Architecture:** Dependency Injection and Service Layer pattern.
 
-## 🔜 Next Up: Phase 2 (Persistence)
-- Integrating **PostgreSQL**.
-- Managing Migrations with **Alembic**.
-- Implementing **JWT Authentication**.
+## 🚀 Progress: Phase 2 (Architecture) - COMPLETED
+- [x] **Database:** PostgreSQL 15 (Dockerized)
+- [x] **ORM:** SQLAlchemy 2.0 (Async)
+- [x] **Migrations:** Alembic
+- [x] **Pattern:** Repository Pattern (Service -> Repository -> DB)
