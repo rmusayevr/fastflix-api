@@ -1,8 +1,10 @@
 import uuid
 import pytest
 import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
 from typing import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
@@ -10,8 +12,10 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
+from app.api.dependencies import get_db
 from app.db.base import Base
 from app.core.config import settings
+from app.main import app
 from app.models.user import UserModel
 
 
@@ -50,7 +54,12 @@ async def db_session(
 ) -> AsyncGenerator[AsyncSession, None]:
     async with async_sessionmaker() as session:
         yield session
-        await session.rollback()
+
+        for table in reversed(Base.metadata.sorted_tables):
+            await session.execute(text(f"TRUNCATE {table.name} CASCADE;"))
+            await session.commit()
+
+        await session.close()
 
 
 @pytest_asyncio.fixture
@@ -64,3 +73,19 @@ async def test_user(db_session: AsyncSession) -> UserModel:
     await db_session.commit()
     await db_session.refresh(user)
     return user
+
+
+@pytest_asyncio.fixture(scope="function")
+async def client(db_session):
+    """
+    Create a new AsyncClient for every test.
+    We override the 'get_db' dependency to use our test 'db_session'.
+    """
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()

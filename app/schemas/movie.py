@@ -20,6 +20,7 @@ class MovieUpdate(BaseModel):
 
 class MovieResponse(MovieBase):
     id: int
+    user_id: int
 
     class Config:
         from_attributes = True
