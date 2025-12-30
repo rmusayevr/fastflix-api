@@ -1,15 +1,18 @@
 #!/bin/bash
 set -e
 
-echo "--- 🔍 DEPLOYMENT DEBUG START ---"
-echo "Current Directory: $(pwd)"
-echo "Listing files in /app:"
-ls -F
-
+echo "--- 🔍 DATABASE SYNC START ---"
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-echo "--- 🚀 RUNNING ALEMBIC UPGRADE ---"
+echo "Checking Alembic Current Revision:"
+alembic current || echo "No version table found."
+
+echo "Checking Alembic Head Revision (Goal):"
+alembic heads
+
+echo "--- 🚀 RUNNING UPGRADE ---"
 alembic upgrade head
-echo "--- ✅ ALEMBIC SUCCESSFUL ---"
+
+echo "--- ✅ SYNC COMPLETE ---"
 echo "--- 🎬 STARTING GUNICORN ---"
 exec "$@"
