@@ -8,8 +8,10 @@ from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 def create_application() -> FastAPI:
     application = FastAPI(
         title=settings.PROJECT_NAME,
+        openapi_url=f"{settings.API_V1_STR}/openapi.json",
         version="1.0.0",
-        docs_url="/docs" if settings.ENVIRONMENT != "prod" else None,
+        docs_url="/docs",
+        redoc_url="/redoc",
     )
 
     application.include_router(api_router, prefix=settings.API_V1_STR)
@@ -18,6 +20,15 @@ def create_application() -> FastAPI:
 
 
 app = create_application()
+
+
+@app.get("/")
+async def root():
+    return {
+        "message": f"Welcome to {settings.PROJECT_NAME}",
+        "docs": "/docs",
+        "status": "online",
+    }
 
 
 @app.exception_handler(MovieNotFoundException)

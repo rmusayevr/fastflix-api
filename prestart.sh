@@ -1,19 +1,22 @@
 #!/bin/bash
+set -e
 
-echo "Running database migrations..."
+echo "--- STARTING PRESTART SCRIPT ---"
+
+# 1. Debug: Check if env vars are present
+if [ -z "$POSTGRES_SERVER" ]; then
+    echo "ERROR: POSTGRES_SERVER is not set!"
+    exit 1
+fi
+
+echo "Running migrations against $POSTGRES_SERVER..."
+
+# 2. Run migrations
+# We use 'PYTHONPATH=.' to make sure alembic finds your 'app' folder
+export PYTHONPATH=$PYTHONPATH:.
 alembic upgrade head
 
-echo "Starting server..."
+echo "--- MIGRATIONS FINISHED SUCCESSFULLY ---"
+
+echo "Starting Gunicorn..."
 exec "$@"
-```
-
-**Make it executable and update Dockerfile again:**
-```bash
-chmod +x prestart.sh
-```
-
-**Final Dockerfile `CMD` update:**
-```dockerfile
-COPY ./prestart.sh .
-ENTRYPOINT ["./prestart.sh"]
-CMD ["gunicorn", "-c", "gunicorn_conf.py", "app.main:app"]
