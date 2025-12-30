@@ -15,6 +15,7 @@ from sqlalchemy.pool import NullPool
 from app.api.dependencies import get_db
 from app.db.base import Base
 from app.core.config import settings
+from app.core.security import create_access_token
 from app.main import app
 from app.models.user import UserModel
 
@@ -89,3 +90,18 @@ async def client(db_session):
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def normal_user_token_headers(client, test_user):
+    return {"Authorization": 
+        f"Bearer {create_access_token(subject=test_user.id)}"}
+
+
+@pytest_asyncio.fixture(scope="function")
+async def authorized_client(client, normal_user_token_headers):
+    client.headers = {
+        **client.headers,
+        **normal_user_token_headers,
+    }
+    return client

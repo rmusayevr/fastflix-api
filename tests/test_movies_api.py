@@ -20,19 +20,18 @@ async def test_create_movie_unauthorized(client):
 
 
 @pytest.mark.asyncio
-async def test_create_movie_authorized(client, test_user):
-    """Test creating a movie with a valid user token."""
-    token = create_access_token(subject=test_user.id)
-    headers = {"Authorization": f"Bearer {token}"}
-
-    payload = {"title": "Integration Test Movie", "director": "Pytest"}
-    response = await client.post("/api/v1/movies/", json=payload, headers=headers)
+async def test_create_movie_authorized(authorized_client, test_user):
+    """
+    Test creating a movie using the pre-authorized client.
+    No manual token creation needed here!
+    """
+    payload = {"title": "Authorized Movie", "director": "Pytest"}
+    response = await authorized_client.post("/api/v1/movies/", json=payload)
 
     assert response.status_code == 201
     data = response.json()
-    assert data["title"] == "Integration Test Movie"
+    assert data["title"] == "Authorized Movie"
     assert data["user_id"] == test_user.id
-    assert "id" in data
 
 
 @pytest.mark.asyncio
@@ -54,3 +53,18 @@ async def test_read_movies_list(client, test_user):
     data = response.json()
 
     assert len(data) == 2
+
+
+@pytest.mark.asyncio
+async def test_delete_movie_owner(authorized_client, test_user, db_session):
+    """Test that the owner can delete their movie."""
+    res = await authorized_client.post(
+        "/api/v1/movies/", json={"title": "To Delete", "director": "Me"}
+    )
+    movie_id = res.json()["id"]
+
+    del_res = await authorized_client.delete(f"/api/v1/movies/{movie_id}")
+    assert del_res.status_code == 204
+
+    del_res_again = await authorized_client.delete(f"/api/v1/movies/{movie_id}")
+    assert del_res_again.status_code == 404
