@@ -26,7 +26,9 @@ app = create_application()
 async def root():
     return {
         "message": f"Welcome to {settings.PROJECT_NAME}",
-        "docs": "/docs",
+        "docs_url": "/docs",
+        "api_v1": settings.API_V1_STR,
+        "environment": settings.ENVIRONMENT,
         "status": "online",
     }
 
