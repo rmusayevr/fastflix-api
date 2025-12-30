@@ -1,17 +1,17 @@
 import multiprocessing
 import os
 
-bind = os.getenv("BIND", "0.0.0.0:8000")
+port = os.getenv("PORT", "8000")
+bind = f"0.0.0.0:{port}"
 
-workers_per_core = float(os.getenv("WORKERS_PER_CORE", "1"))
-default_web_concurrency = workers_per_core * multiprocessing.cpu_count() + 1
-workers = int(os.getenv("WEB_CONCURRENCY", default_web_concurrency))
+workers = int(os.getenv("WEB_CONCURRENCY", "3"))
 
 worker_class = "uvicorn.workers.UvicornWorker"
+
 keepalive = 120
+timeout = 120
 errorlog = "-"
 accesslog = "-"
 loglevel = os.getenv("LOG_LEVEL", "info")
 
 graceful_timeout = 120
-timeout = 120
