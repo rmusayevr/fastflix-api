@@ -3,3 +3,9 @@ class MovieNotFoundException(Exception):
         self.movie_id = movie_id
         self.message = f"Movie with ID {movie_id} not found."
         super().__init__(self.message)
+
+
+class NotAuthorizedException(Exception):
+    def __init__(self):
+        self.message = "You are not authorized to perform this action."
+        super().__init__(self.message)

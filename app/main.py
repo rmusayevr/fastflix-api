@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.api.v1.router import api_router
-from app.core.exceptions import MovieNotFoundException
+from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 
 
 def create_application() -> FastAPI:
@@ -24,6 +24,13 @@ app = create_application()
 async def movie_not_found_handler(request: Request, exc: MovieNotFoundException):
     return JSONResponse(
         status_code=404, content={"error": "Not Found", "detail": exc.message}
+    )
+
+
+@app.exception_handler(NotAuthorizedException)
+async def not_authorized_handler(request: Request, exc: NotAuthorizedException):
+    return JSONResponse(
+        status_code=403, content={"error": "Forbidden", "detail": exc.message}
     )
 
 

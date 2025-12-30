@@ -37,11 +37,18 @@ async def read_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.patch("/{movie_id}", response_model=MovieResponse)
 async def update_movie(
-    movie_id: int, movie_in: MovieUpdate, db: AsyncSession = Depends(get_db)
+    movie_id: int,
+    movie_in: MovieUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
 ):
-    return await update_movie_service(movie_id, movie_in, db)
+    return await update_movie_service(movie_id, movie_in, current_user.id, db)
 
 
 @router.delete("/{movie_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
-    await delete_movie_service(movie_id, db)
+async def delete_movie(
+    movie_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
+    await delete_movie_service(movie_id, current_user.id, db)
