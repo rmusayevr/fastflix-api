@@ -38,7 +38,5 @@ RUN chmod +x /app/prestart.sh
 
 USER appuser
 
-EXPOSE 8000
-
 ENTRYPOINT ["./prestart.sh"]
 CMD ["gunicorn", "-c", "gunicorn_conf.py", "app.main:app"]
