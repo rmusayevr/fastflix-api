@@ -31,6 +31,7 @@ COPY ./app ./app
 COPY ./alembic ./alembic
 COPY ./alembic.ini .
 COPY ./prestart.sh .
+COPY ./gunicorn_conf.py .
 
 RUN chown -R appuser:appuser /app
 RUN chmod +x /app/prestart.sh
@@ -39,6 +40,5 @@ USER appuser
 
 EXPOSE 8000
 
-COPY ./gunicorn_conf.py .
-
+ENTRYPOINT ["./prestart.sh"]
 CMD ["gunicorn", "-c", "gunicorn_conf.py", "app.main:app"]
