@@ -19,11 +19,19 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
-        return (
+        """
+        Builds the async connection string.
+        Only enforces SSL in production environments.
+        """
+        base_url = (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
             f"{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-            f"?ssl=require"
         )
+        
+        if self.ENVIRONMENT == "prod":
+            return f"{base_url}?ssl=require"
+        
+        return base_url
 
     class Config:
         env_file = ".env"
