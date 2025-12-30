@@ -19,8 +19,16 @@ A progressive backend engineering project to build a production-grade Movie Reco
 - [x] **Validation:** Strict Pydantic schemas (Input vs Output models).
 - [x] **Architecture:** Dependency Injection and Service Layer pattern.
 
-## 🚀 Progress: Phase 2 (Architecture) - COMPLETED
+## 🏗️ Progress: Phase 2 (Architecture) - COMPLETED
 - [x] **Database:** PostgreSQL 15 (Dockerized)
 - [x] **ORM:** SQLAlchemy 2.0 (Async)
 - [x] **Migrations:** Alembic
 - [x] **Pattern:** Repository Pattern (Service -> Repository -> DB)
+
+## 🔐 Progress: Phase 3 (Security Features) - COMPLETED
+- [x] **Authentication:** OAuth2 Password Bearer flow.
+- [x] **Authorization:** Role-based ownership logic (Users can only edit their own data).
+- [x] **Cryptography:**
+  - Passwords hashed via `bcrypt`.
+  - Stateless authentication via JWT (HS256).
+- [x] **Dependencies:** `get_current_user` allows protecting routes with a single line of code.
