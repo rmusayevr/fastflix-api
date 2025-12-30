@@ -7,4 +7,7 @@ workers = 2
 worker_class = "uvicorn.workers.UvicornWorker"
 
 timeout = 120
+keepalive = 5
 loglevel = "info"
+errorlog = "-"
+accesslog = "-"
