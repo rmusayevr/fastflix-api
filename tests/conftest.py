@@ -94,8 +94,7 @@ async def client(db_session):
 
 @pytest_asyncio.fixture(scope="function")
 async def normal_user_token_headers(client, test_user):
-    return {"Authorization": 
-        f"Bearer {create_access_token(subject=test_user.id)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=test_user.id)}"}
 
 
 @pytest_asyncio.fixture(scope="function")
