@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, Text, ForeignKey
 from app.db.base import Base
 
 
@@ -10,3 +10,5 @@ class MovieModel(Base):
     title: Mapped[str] = mapped_column(String, index=True)
     director: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    owner = relationship("UserModel", back_populates="movies")

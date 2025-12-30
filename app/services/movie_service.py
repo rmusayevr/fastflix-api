@@ -7,9 +7,9 @@ from app.repositories.movie_repository import MovieRepository
 from app.core.exceptions import MovieNotFoundException
 
 
-async def create_movie_service(movie: MovieCreate, db: AsyncSession) -> MovieModel:
+async def create_movie_service(movie: MovieCreate, user_id: int, db: AsyncSession) -> MovieModel:
     repo = MovieRepository(db)
-    return await repo.create_movie(movie)
+    return await repo.create_movie(movie, user_id)
 
 
 async def get_all_movies_service(db: AsyncSession) -> List[MovieModel]:

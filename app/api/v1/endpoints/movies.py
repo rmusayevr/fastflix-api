@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from app.schemas.movie import MovieResponse, MovieCreate
-from app.api.dependencies import get_db
-from app.schemas.movie import MovieUpdate
+from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
+from app.api.dependencies import get_db, get_current_user
+from app.models.user import UserModel
 from app.services.movie_service import (
     create_movie_service,
     get_all_movies_service,
@@ -22,8 +22,12 @@ async def read_movies(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=MovieResponse, status_code=201)
-async def create_movie(movie: MovieCreate, db: AsyncSession = Depends(get_db)):
-    return await create_movie_service(movie, db)
+async def create_movie(
+    movie: MovieCreate,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await create_movie_service(movie, current_user.id, db)
 
 
 @router.get("/{movie_id}", response_model=MovieResponse)

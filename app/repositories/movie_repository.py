@@ -13,11 +13,14 @@ class MovieRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_movie(self, movie_data: MovieCreate) -> MovieModel:
+    async def create_movie(self, movie_data: MovieCreate, user_id: int) -> MovieModel:
         """
         Create a new movie in the database.
         """
-        movie = MovieModel(**movie_data.model_dump())
+        movie = MovieModel(
+            **movie_data.model_dump(),
+            user_id=user_id,
+        )
 
         self.session.add(movie)
         await self.session.commit()
