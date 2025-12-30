@@ -30,11 +30,15 @@ RUN pip install --no-cache /wheels/*
 COPY ./app ./app
 COPY ./alembic ./alembic
 COPY ./alembic.ini .
+COPY ./prestart.sh .
 
 RUN chown -R appuser:appuser /app
+RUN chmod +x /app/prestart.sh
 
 USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY ./gunicorn_conf.py .
+
+CMD ["gunicorn", "-c", "gunicorn_conf.py", "app.main:app"]
