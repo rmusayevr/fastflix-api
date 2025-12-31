@@ -1,3 +1,6 @@
+import json
+from fastapi.encoders import jsonable_encoder
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.movie_repository import MovieRepository
 from app.schemas.common import PageResponse
@@ -10,8 +13,14 @@ from app.core.redis import redis_client
 async def get_all_movies_service(
     db: AsyncSession, page: int, size: int, search_query: str | None = None
 ) -> PageResponse[MovieResponse]:
-    repo = MovieRepository(db)
+    cache_key = f"movies:{page}:{size}:{search_query or 'all'}"
 
+    cached_data = await redis_client.get(cache_key)
+    if cached_data:
+        print(f"⚡ Cache HIT for {cache_key}")
+        return PageResponse(**json.loads(cached_data))
+
+    repo = MovieRepository(db)
     skip = (page - 1) * size
 
     if search_query:
@@ -24,9 +33,18 @@ async def get_all_movies_service(
 
     total_pages = math.ceil(total / size) if size > 0 else 0
 
-    return PageResponse(
+    response = PageResponse(
         items=items, total=total, page=page, size=size, pages=total_pages
     )
+
+    await redis_client.set(
+        cache_key,
+        json.dumps(jsonable_encoder(response)),
+        ex=60,
+    )
+
+    print(f"🐢 Cache MISS for {cache_key} - Loaded from DB")
+    return response
 
 
 async def create_movie_service(
