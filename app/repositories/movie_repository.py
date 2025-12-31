@@ -27,15 +27,18 @@ class MovieRepository:
         await self.session.refresh(movie)
         return movie
 
-    async def get_all_movies(self) -> list[MovieModel]:
-        """
-        Get all movies from the database.
-        """
-        query = select(MovieModel)
-
+    async def get_all_movies(
+        self, skip: int = 0, limit: int = 100
+    ) -> tuple[list[MovieModel], int]:
+        query = select(MovieModel).offset(skip).limit(limit)
         result = await self.session.execute(query)
+        items = result.scalars().all()
 
-        return result.scalars().all()
+        count_query = select(func.count()).select_from(MovieModel)
+        count_result = await self.session.execute(count_query)
+        total = count_result.scalar() or 0
+
+        return items, total
 
     async def get_by_id(self, movie_id: int) -> MovieModel | None:
         """

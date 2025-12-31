@@ -1,7 +1,6 @@
-import json
-from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.movie_repository import MovieRepository
+from app.schemas.common import PageResponse
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.models.movie import MovieModel
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
@@ -9,44 +8,25 @@ from app.core.redis import redis_client
 
 
 async def get_all_movies_service(
-    db: AsyncSession, search_query: str | None = None
-) -> List[MovieResponse]:
-    if search_query:
-        print(f"🔎 Searching DB for: {search_query}")
-        repo = MovieRepository(db)
-        return await repo.search_movies(search_query)
-
-    cache_key = "all_movies_list"
-
-    try:
-        cached_data = await redis_client.get(cache_key)
-        if cached_data:
-            print("🚀 CACHE HIT: Returning movies from Redis")
-            return json.loads(cached_data)
-    except Exception as e:
-        print(f"⚠️ Redis Error: {e}")
-
-    print("🐢 CACHE MISS: Fetching from PostgreSQL")
+    db: AsyncSession, page: int, size: int, search_query: str | None = None
+) -> PageResponse[MovieResponse]:
     repo = MovieRepository(db)
-    movies = await repo.get_all_movies()
 
-    movie_list = []
-    for m in movies:
-        movie_dict = {
-            "id": m.id,
-            "title": m.title,
-            "director": m.director,
-            "description": m.description,
-            "user_id": m.user_id,
-        }
-        movie_list.append(movie_dict)
+    skip = (page - 1) * size
 
-    try:
-        await redis_client.setex(cache_key, 60, json.dumps(movie_list))
-    except Exception as e:
-        print(f"⚠️ Failed to cache data: {e}")
+    if search_query:
+        items = await repo.search_movies(search_query)
+        total = len(items)
+    else:
+        items, total = await repo.get_all_movies(skip=skip, limit=size)
 
-    return movies
+    import math
+
+    total_pages = math.ceil(total / size) if size > 0 else 0
+
+    return PageResponse(
+        items=items, total=total, page=page, size=size, pages=total_pages
+    )
 
 
 async def create_movie_service(

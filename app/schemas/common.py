@@ -1,0 +1,16 @@
+from typing import Generic, TypeVar, List
+from pydantic import BaseModel
+
+T = TypeVar("T")
+
+
+class PageResponse(BaseModel, Generic[T]):
+    """
+    Standard response structure for paginated lists.
+    """
+
+    items: List[T]
+    total: int
+    page: int
+    size: int
+    pages: int
