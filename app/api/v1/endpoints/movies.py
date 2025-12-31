@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status, Query
+from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
@@ -17,7 +18,11 @@ from app.schemas.common import PageResponse
 router = APIRouter()
 
 
-@router.get("/", response_model=PageResponse[MovieResponse])
+@router.get(
+    "/",
+    response_model=PageResponse[MovieResponse],
+    dependencies=[Depends(RateLimiter(times=5, seconds=60))],
+)
 async def read_movies(
     db: AsyncSession = Depends(get_db),
     q: Optional[str] = None,

@@ -1,8 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi_limiter import FastAPILimiter
+
 from app.core.config import settings
+from app.core.redis import redis_client
 from app.api.v1.router import api_router
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await FastAPILimiter.init(redis_client)
+    yield
+    await redis_client.close()
 
 
 def create_application() -> FastAPI:
@@ -12,6 +23,7 @@ def create_application() -> FastAPI:
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
 
     application.include_router(api_router, prefix=settings.API_V1_STR)
