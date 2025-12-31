@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
     @property
     def DATABASE_URL(self) -> str:
         """
@@ -32,6 +36,10 @@ class Settings(BaseSettings):
             return f"{base_url}?ssl=require"
 
         return base_url
+
+    @property
+    def REDIS_URL(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     class Config:
         env_file = ".env"
