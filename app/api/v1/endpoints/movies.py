@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Optional
+from app.api.dependencies import oauth2_scheme
 
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.api.dependencies import get_db, get_current_user
@@ -17,8 +18,12 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[MovieResponse])
-async def read_movies(db: AsyncSession = Depends(get_db)):
-    return await get_all_movies_service(db)
+async def read_movies(
+    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+    q: Optional[str] = None,
+):
+    return await get_all_movies_service(db, search_query=q)
 
 
 @router.post("/", response_model=MovieResponse, status_code=201)

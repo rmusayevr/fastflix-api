@@ -8,7 +8,14 @@ from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 from app.core.redis import redis_client
 
 
-async def get_all_movies_service(db: AsyncSession) -> List[MovieResponse]:
+async def get_all_movies_service(
+    db: AsyncSession, search_query: str | None = None
+) -> List[MovieResponse]:
+    if search_query:
+        print(f"🔎 Searching DB for: {search_query}")
+        repo = MovieRepository(db)
+        return await repo.search_movies(search_query)
+
     cache_key = "all_movies_list"
 
     try:

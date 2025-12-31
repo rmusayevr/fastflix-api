@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.movie import MovieModel
 from app.schemas.movie import MovieCreate, MovieUpdate
 
@@ -66,3 +66,18 @@ class MovieRepository:
         """
         await self.session.delete(movie)
         await self.session.commit()
+
+    async def search_movies(self, query_str: str) -> list[MovieModel]:
+        search_vector = func.to_tsvector(
+            "english",
+            func.coalesce(MovieModel.title, "")
+            + " "
+            + func.coalesce(MovieModel.description, ""),
+        )
+
+        search_query = func.websearch_to_tsquery("english", query_str)
+
+        statement = select(MovieModel).where(search_vector.op("@@")(search_query))
+
+        result = await self.session.execute(statement)
+        return result.scalars().all()
