@@ -1,19 +1,11 @@
 import json
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.repositories.movie_repository import MovieRepository
+from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
+from app.models.movie import MovieModel
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 from app.core.redis import redis_client
-from app.models.movie import MovieModel
-from app.schemas.movie import MovieCreate, MovieUpdate, MovieResponse
-from app.repositories.movie_repository import MovieRepository
-
-
-async def create_movie_service(
-    movie: MovieCreate, user_id: int, db: AsyncSession
-) -> MovieModel:
-    repo = MovieRepository(db)
-    return await repo.create_movie(movie, user_id)
 
 
 async def get_all_movies_service(db: AsyncSession) -> List[MovieResponse]:
@@ -50,13 +42,23 @@ async def get_all_movies_service(db: AsyncSession) -> List[MovieResponse]:
     return movies
 
 
+async def create_movie_service(
+    movie: MovieCreate, user_id: int, db: AsyncSession
+) -> MovieModel:
+    repo = MovieRepository(db)
+    new_movie = await repo.create_movie(movie, user_id)
+
+    print("🧹 Invalidating Cache: all_movies_list")
+    await redis_client.delete("all_movies_list")
+
+    return new_movie
+
+
 async def get_movie_by_id_service(movie_id: int, db: AsyncSession) -> MovieModel:
     repo = MovieRepository(db)
     movie = await repo.get_by_id(movie_id)
-
     if not movie:
         raise MovieNotFoundException(movie_id)
-
     return movie
 
 
@@ -72,7 +74,12 @@ async def update_movie_service(
     if movie.user_id != user_id:
         raise NotAuthorizedException()
 
-    return await repo.update_movie(movie, update_data)
+    updated_movie = await repo.update_movie(movie, update_data)
+
+    print("🧹 Invalidating Cache: all_movies_list")
+    await redis_client.delete("all_movies_list")
+
+    return updated_movie
 
 
 async def delete_movie_service(movie_id: int, user_id: int, db: AsyncSession) -> None:
@@ -86,3 +93,6 @@ async def delete_movie_service(movie_id: int, user_id: int, db: AsyncSession) ->
         raise NotAuthorizedException()
 
     await repo.delete_movie(movie)
+
+    print("🧹 Invalidating Cache: all_movies_list")
+    await redis_client.delete("all_movies_list")
