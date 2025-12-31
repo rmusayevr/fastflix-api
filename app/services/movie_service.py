@@ -2,12 +2,12 @@ import json
 from fastapi.encoders import jsonable_encoder
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
+from app.core.redis import redis_client
 from app.repositories.movie_repository import MovieRepository
 from app.schemas.common import PageResponse
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.models.movie import MovieModel
-from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
-from app.core.redis import redis_client
 
 
 async def get_all_movies_service(
@@ -28,13 +28,15 @@ async def get_all_movies_service(
         total = len(items)
     else:
         items, total = await repo.get_all_movies(skip=skip, limit=size)
+        
+    items_data = [MovieResponse.model_validate(item) for item in items]
 
     import math
 
     total_pages = math.ceil(total / size) if size > 0 else 0
 
     response = PageResponse(
-        items=items, total=total, page=page, size=size, pages=total_pages
+        items=items_data, total=total, page=page, size=size, pages=total_pages
     )
 
     await redis_client.set(

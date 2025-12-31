@@ -35,6 +35,10 @@ services:
     restart: always
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
+    cap_add:
+      - SYS_PTRACE
     environment:
       - POSTGRES_SERVER=${POSTGRES_SERVER}
       - POSTGRES_USER=${POSTGRES_USER}
