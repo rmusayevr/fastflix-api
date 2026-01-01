@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, asc, case, nullslast, or_
+from sqlalchemy.orm import aliased
 from app.models.movie import MovieModel
 from app.schemas.movie import MovieCreate, MovieUpdate
 from app.models.rating import RatingModel
@@ -148,4 +149,29 @@ class MovieRepository:
         statement = select(MovieModel).where(search_vector.op("@@")(search_query))
 
         result = await self.session.execute(statement)
+        return result.scalars().all()
+
+    async def get_recommendations(self, movie_id: int, limit: int = 5):
+        """
+        Recommend movies based on 'Users who liked this also liked...'
+        """
+        Rating1 = aliased(RatingModel)
+        Rating2 = aliased(RatingModel)
+
+        query = (
+            select(MovieModel)
+            .join(Rating2, MovieModel.id == Rating2.movie_id)
+            .join(Rating1, Rating1.user_id == Rating2.user_id)
+            .where(
+                Rating1.movie_id == movie_id,
+                Rating1.score >= 8,
+                Rating2.score >= 8,
+                MovieModel.id != movie_id,
+            )
+            .group_by(MovieModel.id)
+            .order_by(desc(func.count(Rating2.user_id)))
+            .limit(limit)
+        )
+
+        result = await self.session.execute(query)
         return result.scalars().all()

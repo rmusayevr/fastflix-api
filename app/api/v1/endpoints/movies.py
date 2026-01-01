@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, Literal
+from typing import Literal, List
 
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.api.dependencies import get_db, get_current_user
@@ -13,6 +13,7 @@ from app.services.movie_service import (
     update_movie_service,
     delete_movie_service,
     rate_movie_service,
+    get_recommendations_service,
 )
 from app.schemas.common import PageResponse
 from app.schemas.rating import RatingResponse, RatingCreate
@@ -100,3 +101,14 @@ async def toggle_watchlist(
     current_user: UserModel = Depends(get_current_user),
 ):
     return await toggle_watchlist_service(current_user.id, movie_id, db)
+
+
+@router.get("/{movie_id}/recommendations", response_model=List[MovieResponse])
+async def get_movie_recommendations(
+    movie_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get 5 recommended movies based on user viewing patterns.
+    """
+    return await get_recommendations_service(movie_id, db)

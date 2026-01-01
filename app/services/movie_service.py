@@ -1,4 +1,6 @@
 import json
+
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -143,3 +145,12 @@ async def rate_movie_service(
             user_id, movie_id, rating_data.score
         )
         return new_rating
+
+
+async def get_recommendations_service(movie_id: int, db: AsyncSession):
+    repo = MovieRepository(db)
+    movie = await repo.get_by_id(movie_id)
+    if not movie:
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    return await repo.get_recommendations(movie_id)
