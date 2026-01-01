@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import Literal
+from typing import Literal, Optional
+from pydantic import field_validator, ValidationInfo
 
 
 class Settings(BaseSettings):
@@ -21,29 +22,33 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
 
+    REDIS_URL: Optional[str] = None
+
     TMDB_API_KEY: str | None = None
     ADMIN_EMAIL: str
     ADMIN_PASSWORD: str
 
     @property
     def DATABASE_URL(self) -> str:
-        """
-        Builds the async connection string.
-        Only enforces SSL in production environments.
-        """
         base_url = (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
             f"{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
-
         if self.ENVIRONMENT == "prod":
             return f"{base_url}?ssl=require"
-
         return base_url
 
-    @property
-    def REDIS_URL(self) -> str:
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+    @field_validator("REDIS_URL", mode="before")
+    @classmethod
+    def assemble_redis_url(cls, v: Optional[str], info: ValidationInfo) -> str:
+        if isinstance(v, str) and v.strip():
+            return v
+
+        host = info.data.get("REDIS_HOST", "localhost")
+        port = info.data.get("REDIS_PORT", 6379)
+        db = info.data.get("REDIS_DB", 0)
+
+        return f"redis://{host}:{port}/{db}"
 
     class Config:
         env_file = ".env"
