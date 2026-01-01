@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc, asc, case, nullslast
 from app.models.movie import MovieModel
 from app.schemas.movie import MovieCreate, MovieUpdate
 from app.models.rating import RatingModel
@@ -28,14 +28,34 @@ class MovieRepository:
         await self.session.refresh(movie)
         return movie
 
-    async def get_all_movies(self, skip: int, limit: int):
+    async def get_all_movies(
+        self, skip: int, limit: int, sort_by: str = "id", order: str = "asc"
+    ):
+
+        avg_rating = func.avg(RatingModel.score).label("average_score")
+        rating_sort = case(
+            (avg_rating > 0, avg_rating),
+            else_=None
+        )
+
         query = (
-            select(MovieModel, func.avg(RatingModel.score).label("average_score"))
+            select(MovieModel, avg_rating)
             .outerjoin(RatingModel, MovieModel.id == RatingModel.movie_id)
             .group_by(MovieModel.id)
-            .offset(skip)
-            .limit(limit)
         )
+
+        if sort_by == "rating":
+            sort_column = rating_sort
+        elif sort_by == "title":
+            sort_column = MovieModel.title
+        else:
+            sort_column = MovieModel.id
+
+        query = query.order_by(
+            nullslast(desc(sort_column)) if order == "desc"
+            else nullslast(asc(sort_column))
+        )
+        query = query.offset(skip).limit(limit)
 
         result = await self.session.execute(query)
         rows = result.all()
@@ -45,8 +65,9 @@ class MovieRepository:
             movie.rating = round(avg_score, 1) if avg_score else 0.0
             movies.append(movie)
 
-        total_query = select(func.count(MovieModel.id))
-        total = await self.session.scalar(total_query)
+        total = await self.session.scalar(
+            select(func.count(MovieModel.id))
+        )
 
         return movies, total
 

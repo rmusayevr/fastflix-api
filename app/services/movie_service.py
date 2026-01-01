@@ -13,9 +13,16 @@ from app.repositories.rating_repository import RatingRepository
 
 
 async def get_all_movies_service(
-    db: AsyncSession, page: int, size: int, search_query: str | None = None
+    db: AsyncSession,
+    page: int,
+    size: int,
+    search_query: str | None = None,
+    sort_by: str = "id",
+    order: str = "asc",
 ) -> PageResponse[MovieResponse]:
-    cache_key = f"movies:{page}:{size}:{search_query or 'all'}"
+    cache_key = (
+        f"movies:{page}:{size}:" f"{search_query or 'all'}:" f"{sort_by}:{order}"
+    )
 
     cached_data = await redis_client.get(cache_key)
     if cached_data:
@@ -29,7 +36,9 @@ async def get_all_movies_service(
         items = await repo.search_movies(search_query)
         total = len(items)
     else:
-        items, total = await repo.get_all_movies(skip=skip, limit=size)
+        items, total = await repo.get_all_movies(
+            skip=skip, limit=size, sort_by=sort_by, order=order
+        )
 
     items_data = [MovieResponse.model_validate(item) for item in items]
 
