@@ -4,10 +4,15 @@ from app.core.security import create_access_token
 
 @pytest.mark.asyncio
 async def test_read_movies_empty(client):
-    """Test that a fresh DB returns an empty list."""
-    response = await client.get("/api/v1/movies/")
+    """Test that a fresh DB returns an empty paginated response."""
+    response = await client.get(
+        "/api/v1/movies/",
+        params={"page": 1, "size": 10, "sort_by": "rating", "order": "desc"},
+    )
+    print(response.json())
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json()["items"] == []
+    assert response.json()["total"] == 0
 
 
 @pytest.mark.asyncio
@@ -37,7 +42,6 @@ async def test_create_movie_authorized(authorized_client, test_user):
 @pytest.mark.asyncio
 async def test_read_movies_list(client, test_user):
     """Test that the GET list endpoint returns data."""
-
     token = create_access_token(subject=test_user.id)
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -48,11 +52,15 @@ async def test_read_movies_list(client, test_user):
         "/api/v1/movies/", json={"title": "M2", "director": "D2"}, headers=headers
     )
 
-    response = await client.get("/api/v1/movies/")
+    response = await client.get(
+        "/api/v1/movies/",
+        headers=headers,
+        params={"page": 1, "size": 10, "sort_by": "rating", "order": "desc"},
+    )
+    print(response.json())
     assert response.status_code == 200
     data = response.json()
-
-    assert len(data) == 2
+    assert len(data["items"]) == 2
 
 
 @pytest.mark.asyncio

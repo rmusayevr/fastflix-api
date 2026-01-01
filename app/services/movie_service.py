@@ -23,9 +23,7 @@ async def get_all_movies_service(
     order: str = "asc",
     min_rating: float = None,
 ) -> PageResponse[MovieResponse]:
-    cache_key = (
-        f"movies:{page}:{size}:" f"{search_query or 'all'}:" f"{sort_by}:{order}"
-    )
+    cache_key = f"movies:{page}:{size}:{search_query or 'all'}:{sort_by}:{order}"
 
     cached_data = await redis_client.get(cache_key)
     if cached_data:

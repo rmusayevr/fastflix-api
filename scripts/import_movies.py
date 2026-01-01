@@ -56,7 +56,7 @@ def upload_movie(movie, token):
     if res.status_code == 201:
         print(f"✅ Imported: {movie['title']}")
     elif res.status_code == 429:
-        print(f"⚠️ Rate Limit Hit! Sleeping...")
+        print("⚠️ Rate Limit Hit! Sleeping...")
         time.sleep(60)
     else:
         print(f"❌ Failed: {movie['title']} - {res.text}")

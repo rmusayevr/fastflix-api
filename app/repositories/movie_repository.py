@@ -38,7 +38,6 @@ class MovieRepository:
         min_rating: float = None,
         search_query: str = None,
     ):
-
         avg_rating = func.avg(RatingModel.score).label("average_score")
         rating_sort = case((avg_rating > 0, avg_rating), else_=None)
 

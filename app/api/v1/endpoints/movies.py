@@ -25,7 +25,7 @@ router = APIRouter()
 @router.get(
     "/",
     response_model=PageResponse[MovieResponse],
-    dependencies=[Depends(RateLimiter(times=10, seconds=60))],
+    dependencies=[Depends(RateLimiter(times=50, seconds=60))],
 )
 async def read_movies(
     db: AsyncSession = Depends(get_db),

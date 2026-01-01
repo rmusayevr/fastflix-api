@@ -1,9 +1,10 @@
 import uuid
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
 from typing import AsyncGenerator
+from unittest.mock import AsyncMock
 
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -11,6 +12,9 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
+
+from fastapi import Request, Response
+from fastapi_limiter.depends import RateLimiter
 
 from app.api.dependencies import get_db
 from app.db.base import Base
@@ -20,7 +24,38 @@ from app.main import app
 from app.models.user import UserModel
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(autouse=True)
+def mock_rate_limiter(monkeypatch):
+    """
+    Mock the RateLimiter to do nothing.
+
+    IMPORTANT: We cannot use AsyncMock() directly because FastAPI inspects
+    the signature of the dependency. AsyncMock has (*args, **kwargs), which
+    FastAPI interprets as required query parameters, causing a 422 error.
+
+    We define a function with explicit type hints so FastAPI injects
+    Request and Response correctly.
+    """
+
+    async def mock_call(self, request: Request, response: Response):
+        return True
+
+    monkeypatch.setattr(RateLimiter, "__call__", mock_call)
+
+
+@pytest_asyncio.fixture(autouse=True)
+def mock_redis_client(monkeypatch):
+    from app.services import movie_service
+
+    mock_redis = AsyncMock()
+    mock_redis.get.return_value = None
+    mock_redis.set.return_value = True
+    mock_redis.delete.return_value = True
+
+    monkeypatch.setattr(movie_service, "redis_client", mock_redis)
+
+
+@pytest_asyncio.fixture
 async def engine():
     engine = create_async_engine(
         settings.DATABASE_URL,
@@ -40,7 +75,7 @@ async def engine():
     await engine.dispose()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def async_sessionmaker(engine):
     return sessionmaker(
         bind=engine,
@@ -94,7 +129,7 @@ async def client(db_session):
 
 @pytest_asyncio.fixture(scope="function")
 async def normal_user_token_headers(client, test_user):
-    return {"Authorization": f"Bearer {create_access_token(subject=test_user.id)}"}
+    return {"Authorization": f"Bearer {create_access_token(subject=str(test_user.id))}"}
 
 
 @pytest_asyncio.fixture(scope="function")
