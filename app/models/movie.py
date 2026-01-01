@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Text, ForeignKey
 from app.db.base import Base
+from typing import TYPE_CHECKING, List
+
+if TYPE_CHECKING:
+    from app.models.rating import RatingModel
 
 
 class MovieModel(Base):
@@ -12,3 +16,6 @@ class MovieModel(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     owner = relationship("UserModel", back_populates="movies")
+    ratings: Mapped[List["RatingModel"]] = relationship(
+        "RatingModel", back_populates="movie"
+    )

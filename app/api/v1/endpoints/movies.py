@@ -12,8 +12,10 @@ from app.services.movie_service import (
     get_movie_by_id_service,
     update_movie_service,
     delete_movie_service,
+    rate_movie_service,
 )
 from app.schemas.common import PageResponse
+from app.schemas.rating import RatingResponse, RatingCreate
 
 router = APIRouter()
 
@@ -63,3 +65,13 @@ async def delete_movie(
     current_user: UserModel = Depends(get_current_user),
 ):
     await delete_movie_service(movie_id, current_user.id, db)
+
+
+@router.post("/{movie_id}/rate", response_model=RatingResponse)
+async def rate_movie(
+    movie_id: int,
+    rating_data: RatingCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
+    return await rate_movie_service(movie_id, rating_data, current_user.id, db)

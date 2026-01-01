@@ -8,6 +8,8 @@ from app.repositories.movie_repository import MovieRepository
 from app.schemas.common import PageResponse
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.models.movie import MovieModel
+from app.schemas.rating import RatingCreate
+from app.repositories.rating_repository import RatingRepository
 
 
 async def get_all_movies_service(
@@ -28,7 +30,7 @@ async def get_all_movies_service(
         total = len(items)
     else:
         items, total = await repo.get_all_movies(skip=skip, limit=size)
-        
+
     items_data = [MovieResponse.model_validate(item) for item in items]
 
     import math
@@ -103,3 +105,26 @@ async def delete_movie_service(movie_id: int, user_id: int, db: AsyncSession) ->
 
     print("🧹 Invalidating Cache: all_movies_list")
     await redis_client.delete("all_movies_list")
+
+
+async def rate_movie_service(
+    movie_id: int, rating_data: RatingCreate, user_id: int, db: AsyncSession
+):
+    movie_repo = MovieRepository(db)
+    movie = await movie_repo.get_by_id(movie_id)
+    if not movie:
+        raise MovieNotFoundException(movie_id)
+
+    rating_repo = RatingRepository(db)
+    existing_rating = await rating_repo.get_rating(user_id, movie_id)
+
+    if existing_rating:
+        updated_rating = await rating_repo.update_rating(
+            existing_rating, rating_data.score
+        )
+        return updated_rating
+    else:
+        new_rating = await rating_repo.create_rating(
+            user_id, movie_id, rating_data.score
+        )
+        return new_rating
