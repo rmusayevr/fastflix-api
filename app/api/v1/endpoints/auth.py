@@ -8,6 +8,7 @@ from app.schemas.user import UserCreate, UserResponse
 from app.services.user_service import register_user_service, authenticate_user_service
 from app.core.security import create_access_token
 from app.models.user import UserModel
+from app.tasks.email_tasks import send_welcome_email
 
 router = APIRouter()
 
@@ -16,6 +17,7 @@ router = APIRouter()
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     try:
         user = await register_user_service(user_in, db)
+        send_welcome_email.delay(user.email)
         return user
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
