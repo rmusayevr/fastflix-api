@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
+    
+    TMDB_API_KEY: str | None = None
 
     @property
     def DATABASE_URL(self) -> str:
