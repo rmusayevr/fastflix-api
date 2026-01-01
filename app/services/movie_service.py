@@ -19,6 +19,7 @@ async def get_all_movies_service(
     search_query: str | None = None,
     sort_by: str = "id",
     order: str = "asc",
+    min_rating: float = None,
 ) -> PageResponse[MovieResponse]:
     cache_key = (
         f"movies:{page}:{size}:" f"{search_query or 'all'}:" f"{sort_by}:{order}"
@@ -37,7 +38,7 @@ async def get_all_movies_service(
         total = len(items)
     else:
         items, total = await repo.get_all_movies(
-            skip=skip, limit=size, sort_by=sort_by, order=order
+            skip=skip, limit=size, sort_by=sort_by, order=order, min_rating=min_rating
         )
 
     items_data = [MovieResponse.model_validate(item) for item in items]

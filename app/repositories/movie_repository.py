@@ -29,20 +29,25 @@ class MovieRepository:
         return movie
 
     async def get_all_movies(
-        self, skip: int, limit: int, sort_by: str = "id", order: str = "asc"
+        self,
+        skip: int,
+        limit: int,
+        sort_by: str = "id",
+        order: str = "asc",
+        min_rating: float = None,
     ):
 
         avg_rating = func.avg(RatingModel.score).label("average_score")
-        rating_sort = case(
-            (avg_rating > 0, avg_rating),
-            else_=None
-        )
+        rating_sort = case((avg_rating > 0, avg_rating), else_=None)
 
         query = (
             select(MovieModel, avg_rating)
             .outerjoin(RatingModel, MovieModel.id == RatingModel.movie_id)
             .group_by(MovieModel.id)
         )
+
+        if min_rating is not None:
+            query = query.having(avg_rating >= min_rating)
 
         if sort_by == "rating":
             sort_column = rating_sort
@@ -52,12 +57,13 @@ class MovieRepository:
             sort_column = MovieModel.id
 
         query = query.order_by(
-            nullslast(desc(sort_column)) if order == "desc"
+            nullslast(desc(sort_column))
+            if order == "desc"
             else nullslast(asc(sort_column))
         )
-        query = query.offset(skip).limit(limit)
 
-        result = await self.session.execute(query)
+        paginated_query = query.offset(skip).limit(limit)
+        result = await self.session.execute(paginated_query)
         rows = result.all()
 
         movies = []
@@ -65,9 +71,19 @@ class MovieRepository:
             movie.rating = round(avg_score, 1) if avg_score else 0.0
             movies.append(movie)
 
-        total = await self.session.scalar(
-            select(func.count(MovieModel.id))
+        subquery_stmt = (
+            select(MovieModel.id)
+            .outerjoin(RatingModel, MovieModel.id == RatingModel.movie_id)
+            .group_by(MovieModel.id)
         )
+
+        if min_rating is not None:
+            subquery_stmt = subquery_stmt.having(avg_rating >= min_rating)
+
+        subquery = subquery_stmt.subquery()
+        count_query = select(func.count()).select_from(subquery)
+
+        total = await self.session.scalar(count_query)
 
         return movies, total
 

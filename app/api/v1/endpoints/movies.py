@@ -32,9 +32,10 @@ async def read_movies(
     size: int = Query(10, ge=1, le=100, description="Items per page"),
     sort_by: Literal["id", "title", "rating"] = "rating",
     order: Literal["asc", "desc"] = "desc",
+    min_rating: float = Query(None, ge=0, le=10, description="Filter movies with avg rating >= this value"),
 ):
     return await get_all_movies_service(
-        db, page, size, search_query=q, sort_by=sort_by, order=order
+        db, page, size, search_query=q, sort_by=sort_by, order=order, min_rating=min_rating
     )
 
 
