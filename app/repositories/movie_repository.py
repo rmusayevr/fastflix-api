@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models.movie import MovieModel
 from app.schemas.movie import MovieCreate, MovieUpdate
+from app.models.rating import RatingModel
 
 
 class MovieRepository:
@@ -27,18 +28,27 @@ class MovieRepository:
         await self.session.refresh(movie)
         return movie
 
-    async def get_all_movies(
-        self, skip: int = 0, limit: int = 100
-    ) -> tuple[list[MovieModel], int]:
-        query = select(MovieModel).offset(skip).limit(limit)
+    async def get_all_movies(self, skip: int, limit: int):
+        query = (
+            select(MovieModel, func.avg(RatingModel.score).label("average_score"))
+            .outerjoin(RatingModel, MovieModel.id == RatingModel.movie_id)
+            .group_by(MovieModel.id)
+            .offset(skip)
+            .limit(limit)
+        )
+
         result = await self.session.execute(query)
-        items = result.scalars().all()
+        rows = result.all()
 
-        count_query = select(func.count()).select_from(MovieModel)
-        count_result = await self.session.execute(count_query)
-        total = count_result.scalar() or 0
+        movies = []
+        for movie, avg_score in rows:
+            movie.rating = round(avg_score, 1) if avg_score else 0.0
+            movies.append(movie)
 
-        return items, total
+        total_query = select(func.count(MovieModel.id))
+        total = await self.session.scalar(total_query)
+
+        return movies, total
 
     async def get_by_id(self, movie_id: int) -> MovieModel | None:
         """
