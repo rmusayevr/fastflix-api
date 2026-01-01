@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
     
     TMDB_API_KEY: str | None = None
+    ADMIN_EMAIL: str
+    ADMIN_PASSWORD: str
 
     @property
     def DATABASE_URL(self) -> str:
