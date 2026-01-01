@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from app.models.watchlist import WatchlistModel
+from app.models.movie import MovieModel
+from sqlalchemy import desc
 
 
 class WatchlistRepository:
@@ -27,3 +29,19 @@ class WatchlistRepository:
         )
         await self.session.execute(query)
         await self.session.commit()
+
+    async def get_user_watchlist(self, user_id: int, skip: int, limit: int):
+        """
+        Get all movies in the user's watchlist, ordered by most recently added.
+        """
+        query = (
+            select(MovieModel)
+            .join(WatchlistModel, MovieModel.id == WatchlistModel.movie_id)
+            .where(WatchlistModel.user_id == user_id)
+            .order_by(desc(WatchlistModel.added_at))
+            .offset(skip)
+            .limit(limit)
+        )
+
+        result = await self.session.execute(query)
+        return result.scalars().all()

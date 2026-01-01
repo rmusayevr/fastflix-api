@@ -19,3 +19,11 @@ async def toggle_watchlist_service(user_id: int, movie_id: int, db: AsyncSession
     else:
         await watchlist_repo.add_item(user_id, movie_id)
         return {"status": "added", "movie_id": movie_id}
+
+
+async def get_user_watchlist_service(
+    user_id: int, page: int, size: int, db: AsyncSession
+):
+    repo = WatchlistRepository(db)
+    movies = await repo.get_user_watchlist(user_id, skip=(page - 1) * size, limit=size)
+    return movies
