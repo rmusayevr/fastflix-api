@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from app.models.rating import RatingModel
+    from app.models.watchlist import WatchlistModel
 
 
 class MovieModel(Base):
@@ -18,4 +19,7 @@ class MovieModel(Base):
     owner = relationship("UserModel", back_populates="movies")
     ratings: Mapped[List["RatingModel"]] = relationship(
         "RatingModel", back_populates="movie"
+    )
+    watchlist_users: Mapped["WatchlistModel"] = relationship(
+        "WatchlistModel", back_populates="movie"
     )

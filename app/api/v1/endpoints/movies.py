@@ -16,6 +16,7 @@ from app.services.movie_service import (
 )
 from app.schemas.common import PageResponse
 from app.schemas.rating import RatingResponse, RatingCreate
+from app.services.watchlist_service import toggle_watchlist_service
 
 router = APIRouter()
 
@@ -90,3 +91,12 @@ async def rate_movie(
     current_user: UserModel = Depends(get_current_user),
 ):
     return await rate_movie_service(movie_id, rating_data, current_user.id, db)
+
+
+@router.post("/{movie_id}/watchlist")
+async def toggle_watchlist(
+    movie_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),
+):
+    return await toggle_watchlist_service(current_user.id, movie_id, db)
