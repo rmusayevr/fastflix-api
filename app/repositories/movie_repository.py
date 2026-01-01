@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, asc, case, nullslast
+from sqlalchemy import select, func, desc, asc, case, nullslast, or_
 from app.models.movie import MovieModel
 from app.schemas.movie import MovieCreate, MovieUpdate
 from app.models.rating import RatingModel
@@ -35,6 +35,7 @@ class MovieRepository:
         sort_by: str = "id",
         order: str = "asc",
         min_rating: float = None,
+        search_query: str = None,
     ):
 
         avg_rating = func.avg(RatingModel.score).label("average_score")
@@ -45,6 +46,15 @@ class MovieRepository:
             .outerjoin(RatingModel, MovieModel.id == RatingModel.movie_id)
             .group_by(MovieModel.id)
         )
+
+        if search_query:
+            search_pattern = f"%{search_query}%"
+            query = query.where(
+                or_(
+                    MovieModel.title.ilike(search_pattern),
+                    MovieModel.description.ilike(search_pattern),
+                )
+            )
 
         if min_rating is not None:
             query = query.having(avg_rating >= min_rating)
@@ -79,6 +89,14 @@ class MovieRepository:
 
         if min_rating is not None:
             subquery_stmt = subquery_stmt.having(avg_rating >= min_rating)
+
+        if search_query:
+            subquery_stmt = subquery_stmt.where(
+                or_(
+                    MovieModel.title.ilike(search_pattern),
+                    MovieModel.description.ilike(search_pattern),
+                )
+            )
 
         subquery = subquery_stmt.subquery()
         count_query = select(func.count()).select_from(subquery)

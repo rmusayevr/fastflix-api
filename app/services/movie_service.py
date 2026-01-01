@@ -16,7 +16,7 @@ async def get_all_movies_service(
     db: AsyncSession,
     page: int,
     size: int,
-    search_query: str | None = None,
+    search_query: str = None,
     sort_by: str = "id",
     order: str = "asc",
     min_rating: float = None,
@@ -38,7 +38,12 @@ async def get_all_movies_service(
         total = len(items)
     else:
         items, total = await repo.get_all_movies(
-            skip=skip, limit=size, sort_by=sort_by, order=order, min_rating=min_rating
+            skip=skip,
+            limit=size,
+            sort_by=sort_by,
+            order=order,
+            min_rating=min_rating,
+            search_query=search_query,
         )
 
     items_data = [MovieResponse.model_validate(item) for item in items]

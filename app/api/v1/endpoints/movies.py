@@ -27,15 +27,25 @@ router = APIRouter()
 )
 async def read_movies(
     db: AsyncSession = Depends(get_db),
-    q: Optional[str] = None,
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(10, ge=1, le=100, description="Items per page"),
     sort_by: Literal["id", "title", "rating"] = "rating",
     order: Literal["asc", "desc"] = "desc",
-    min_rating: float = Query(None, ge=0, le=10, description="Filter movies with avg rating >= this value"),
+    min_rating: float = Query(
+        None, ge=0, le=10, description="Filter movies with avg rating >= this value"
+    ),
+    search_query: str = Query(
+        None, description="Search movies by title or description"
+    ),
 ):
     return await get_all_movies_service(
-        db, page, size, search_query=q, sort_by=sort_by, order=order, min_rating=min_rating
+        db,
+        page,
+        size,
+        search_query=search_query,
+        sort_by=sort_by,
+        order=order,
+        min_rating=min_rating,
     )
 
 
