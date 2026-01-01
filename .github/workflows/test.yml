@@ -56,5 +56,8 @@ jobs:
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
           PROJECT_NAME: FastFlix-CI
           ENVIRONMENT: test
+          ADMIN_EMAIL: admin@example.com
+          ADMIN_PASSWORD: admin123
+          REDIS_URL: redis://localhost:6379/0
         run: |
           pytest
