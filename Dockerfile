@@ -23,7 +23,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libpq5 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /root/.local /home/appuser/.local
+COPY --chown=appuser:appuser --from=builder /root/.local /home/appuser/.local
 
 ENV PATH=/home/appuser/.local/bin:$PATH
 
@@ -33,7 +33,7 @@ COPY ./alembic.ini .
 COPY ./prestart.sh .
 COPY ./gunicorn_conf.py .
 
-RUN chown -R appuser:appuser /app /home/appuser/.local
+RUN chown -R appuser:appuser /app
 RUN chmod +x /app/prestart.sh
 
 USER appuser
