@@ -1,13 +1,15 @@
-#!/bin/bash
-set -e
+#! /usr/bin/env bash
+
+export PATH=$PATH:/home/appuser/.local/bin
+
+sleep 10;
 
 echo "--- 🔍 DATABASE SYNC START ---"
-export PYTHONPATH=$PYTHONPATH:$(pwd)
-
-
 echo "--- 🚀 RUNNING ALEMBIC UPGRADE ---"
-alembic upgrade head
+
+python -m alembic upgrade head
 
 echo "--- ✅ SYNC COMPLETE ---"
-echo "--- 🎬 STARTING GUNICORN ---"
+echo "--- 🎬 STARTING APPLICATION ---"
+
 exec "$@"

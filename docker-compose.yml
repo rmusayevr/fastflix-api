@@ -57,10 +57,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    command: >
+      sh -c "pip install -r requirements-dev.txt && ./prestart.sh uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   celery_worker:
     build: .
-    command: celery -A app.core.celery_app worker --loglevel=info
+    command: >
+      sh -c "./prestart.sh celery -A app.core.celery_app worker --loglevel=info"
     volumes:
       - .:/app
     environment:
