@@ -1,7 +1,8 @@
 import multiprocessing
 import os
 
-bind = os.getenv("BIND", "0.0.0.0:8000")
+port = os.getenv("PORT", "8000")
+bind = os.getenv("BIND", f"0.0.0.0:{port}")
 
 workers_str = os.getenv("WEB_CONCURRENCY", None)
 
