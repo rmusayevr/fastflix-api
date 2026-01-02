@@ -77,6 +77,14 @@ pytest --cov=app --cov-report=html tests/
 
 Open `htmlcov/index.html` to view the coverage heatmap.
 
+
+## 🎥 Core Features
+- **Recommendation Engine:** Item-based collaborative filtering (SQL-based) to suggest movies based on "Users who liked this also liked..." logic.
+- **User Watchlists:** Many-to-Many relationship allowing users to save movies for later.
+- **Ratings System:** Users can rate movies (1-10 stars), affecting global averages.
+- **Background Tasks:** Asynchronous email delivery and heavy processing using Celery & Redis.
+- **Rate Limiting:** Redis-backed throttling to prevent API abuse.
+
 ## 🔐 Security Features
 - **Authentication:** OAuth2 Password Bearer flow.
 - **Authorization:** Role-based ownership logic (Users can only edit their own data).
@@ -118,6 +126,12 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **CI/CD:** Fully automated GitHub Actions pipeline.
 - [x] **Cloud Migration:** Deployed to Railway with Neon Postgres (SSL enforced).
 
+✅ **Phase 6: Advanced Logic & Performance**
+- [x] **Watchlists**: Many-to-Many relationships implementation.
+- [x] **Recommendations**: SQL-based collaborative filtering algorithm.
+- [x] **Background Workers**: Celery + Redis for async tasks (Emails).
+- [x] **Rate Limiting**: FastAPI Limiter with Redis backend.
+
 ## 📂 Project Structure
 ```
 fastflix-api/
@@ -129,6 +143,7 @@ fastflix-api/
 │   ├── repositories/   # DB Access Layer (Repository Pattern)
 │   ├── schemas/        # Pydantic Models (Validation)
 │   ├── services/       # Business Logic Layer
+|   ├── tasks/          # Celery Background Tasks
 │   └── main.py         # FastAPI Entrypoint
 ├── alembic/            # Migration scripts & env.py
 ├── tests/              # Pytest Suite (Integration & Unit)
