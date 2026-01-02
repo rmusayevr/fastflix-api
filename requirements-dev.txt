@@ -13,3 +13,4 @@ gevent==25.9.1
 geventhttpclient==2.3.7
 greenlet==3.3.0
 pyzmq==27.1.0
+boto3-stubs[s3]==1.42.19

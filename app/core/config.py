@@ -28,6 +28,16 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str
     ADMIN_PASSWORD: str
 
+    MINIO_ROOT_USER: str | None = None
+    MINIO_ROOT_PASSWORD: str | None = None
+
+    S3_BUCKET_NAME: str = "fastflix-media"
+    S3_ENDPOINT_URL: str | None = None
+
+    AWS_ACCESS_KEY_ID: str | None = None
+    AWS_SECRET_ACCESS_KEY: str | None = None
+    AWS_REGION: str = "us-east-1"
+
     @property
     def DATABASE_URL(self) -> str:
         base_url = (

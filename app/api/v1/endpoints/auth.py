@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import uuid
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +11,7 @@ from app.services.user_service import register_user_service, authenticate_user_s
 from app.core.security import create_access_token
 from app.models.user import UserModel
 from app.tasks.email_tasks import send_welcome_email
+from app.utils.storage import upload_file_to_s3
 
 router = APIRouter()
 
@@ -47,4 +50,28 @@ async def read_users_me(current_user: UserModel = Depends(get_current_user)):
     Fetch the current logged-in user.
     This route is protected.
     """
+    return current_user
+
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Upload a profile picture to S3/MinIO and update the user profile.
+    """
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Only JPEG or PNG images allowed")
+
+    file_extension = file.filename.split(".")[-1]
+    unique_filename = f"users/{current_user.id}/avatar_{uuid.uuid4()}.{file_extension}"
+
+    avatar_url = await upload_file_to_s3(file, unique_filename)
+
+    current_user.avatar = avatar_url
+    await db.commit()
+    await db.refresh(current_user)
+
     return current_user

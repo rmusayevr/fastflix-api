@@ -16,7 +16,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    
+
   redis:
     image: redis:7-alpine
     container_name: fastflix_redis
@@ -76,5 +76,37 @@ services:
       - redis
       - db
 
+  minio:
+    image: minio/minio
+    container_name: fastflix_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb myminio/${S3_BUCKET_NAME};
+      /usr/bin/mc anonymous set public myminio/${S3_BUCKET_NAME};
+      exit 0;
+      "
+
 volumes:
   postgres_data:
+  minio_data:
