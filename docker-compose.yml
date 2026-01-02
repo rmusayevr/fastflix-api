@@ -75,6 +75,7 @@ services:
     depends_on:
       - redis
       - db
+      - mailpit
 
   minio:
     image: minio/minio
@@ -106,6 +107,14 @@ services:
       /usr/bin/mc anonymous set public myminio/${S3_BUCKET_NAME};
       exit 0;
       "
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: fastflix_mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    restart: always
 
 volumes:
   postgres_data:
