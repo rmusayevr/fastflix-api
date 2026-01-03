@@ -1,25 +1,36 @@
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Text, ForeignKey
 from app.db.base import Base
-from typing import TYPE_CHECKING, List
-
-if TYPE_CHECKING:
-    from app.models.rating import RatingModel
-    from app.models.watchlist import WatchlistModel
 
 
-class MovieModel(Base):
+movie_genres_link = Table(
+    "movie_genres",
+    Base.metadata,
+    Column("movie_id", ForeignKey("movies.id"), primary_key=True),
+    Column("genre_id", ForeignKey("genres.id"), primary_key=True),
+)
+
+
+class Genre(Base):
+    __tablename__ = "genres"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+
+    movies = relationship("Movie", secondary=movie_genres_link, back_populates="genres")
+
+
+class Movie(Base):
     __tablename__ = "movies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, index=True)
-    director: Mapped[str] = mapped_column(String)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    owner = relationship("UserModel", back_populates="movies")
-    ratings: Mapped[List["RatingModel"]] = relationship(
-        "RatingModel", back_populates="movie"
-    )
-    watchlist_users: Mapped["WatchlistModel"] = relationship(
-        "WatchlistModel", back_populates="movie"
-    )
+    description: Mapped[str] = mapped_column(Text)
+
+    video_url: Mapped[str] = mapped_column(String)
+    thumbnail_url: Mapped[str] = mapped_column(String)
+
+    release_year: Mapped[int] = mapped_column(Integer)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    genres = relationship("Genre", secondary=movie_genres_link, back_populates="movies")
