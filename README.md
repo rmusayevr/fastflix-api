@@ -131,27 +131,60 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **Recommendations**: SQL-based collaborative filtering algorithm.
 - [x] **Background Workers**: Celery + Redis for async tasks (Emails).
 - [x] **Rate Limiting**: FastAPI Limiter with Redis backend.
+- [x] **Model Optimization**: 
+    - Native PostgreSQL Search Vectors (TSVector + GIN Index).
+    - Denormalized Ratings for O(1) read performance.
+    - SEO-friendly Slugs & Audit Timestamps.
+    - Async CLI Data Importer with Genre Mapping.
+
+🔄 **Phase 7: Real-Time & Interaction (Days 60-68)**
+- [ ] **WebSockets**: Real-time notifications system.
+- [ ] **Server-Sent Events (SSE)**: Live status streaming.
+- [ ] **Advanced Celery**: Task chaining and prioritization.
+
+🔄 **Phase 8: Observability & Monitoring (Days 69-78)**
+- [ ] **Structured Logging**: JSON logging for production parsing.
+- [ ] **APM**: Integration with Sentry/OpenTelemetry.
+- [ ] **Metrics**: Prometheus & Grafana dashboard integration.
+
+🔄 **Phase 9: Security Hardening (Days 79-88)**
+- [ ] **OAuth2**: Social Login (Google/GitHub).
+- [ ] **RBAC**: Advanced Role-Based Access Control permissions.
+- [ ] **Security Headers**: Middleware hardening (CORS, HSTS).
+
+🔄 **Phase 10: Scale & Search (Days 89-95)**
+- [ ] **Search Engine**: ElasticSearch/MeiliSearch integration.
+- [ ] **DB Tuning**: Query analysis and index optimization.
+
+🏁 **Phase 11: Final Polish (Days 96-100)**
+- [ ] **Documentation**: OpenAPI examples & Architecture diagrams.
+- [ ] **Load Testing**: High-concurrency stress testing.
+- [ ] **Final Release**: Production deployment v1.0.
 
 ## 📂 Project Structure
 ```
 fastflix-api/
+├── .github/workflows/  # CI/CD Pipelines (GitHub Actions)
 ├── app/
-│   ├── api/            # Routes & Endpoints
-│   ├── core/           # Config, Security & Exceptions
+│   ├── api/            # Routes & Endpoints (v1)
+│   ├── core/           # Config, Security, Celery & Exceptions
 │   ├── db/             # Database session & Base models
-│   ├── models/         # SQLAlchemy Table Definitions
+│   ├── models/         # SQLAlchemy Tables (Movies, Users, Ratings)
 │   ├── repositories/   # DB Access Layer (Repository Pattern)
-│   ├── schemas/        # Pydantic Models (Validation)
+│   ├── schemas/        # Pydantic Models (Request/Response)
 │   ├── services/       # Business Logic Layer
-|   ├── tasks/          # Celery Background Tasks
-│   └── main.py         # FastAPI Entrypoint
-├── alembic/            # Migration scripts & env.py
-├── tests/              # Pytest Suite (Integration & Unit)
+│   ├── tasks/          # Background Workers (Celery + Redis)
+│   ├── templates/      # Jinja2 Templates (Emails)
+│   ├── utils/          # Utility functions (Storage, Helpers)
+│   └── main.py         # Application Entrypoint
+├── alembic/            # Database Migrations (Version Control)
+├── scripts/            # Management CLI & Data Importers
+├── tests/              # Pytest Suite (Unit, Integration, Load)
 ├── Dockerfile          # Multi-stage production build
-├── docker-compose.yml  # Local dev orchestration
-├── gunicorn_conf.py    # Production server configuration
+├── docker-compose.yml  # Full stack orchestration (App, DB, Redis, MinIO)
+├── gunicorn_conf.py    # Production Process Manager config
 ├── prestart.sh         # Migration & startup automation script
-└── requirements.txt    # Project dependencies
+└── requirements.txt    # Python Dependencies
 ```
 
 **Live Demo:** https://fastflix-api-production.up.railway.app/docs

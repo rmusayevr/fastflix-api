@@ -1,14 +1,14 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, Integer, CheckConstraint, UniqueConstraint
 from app.db.base import Base
+from app.models.mixins import TimestampMixin
 
 
-class RatingModel(Base):
+class RatingModel(Base, TimestampMixin):
     __tablename__ = "ratings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     score: Mapped[int] = mapped_column(Integer)
-
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
 

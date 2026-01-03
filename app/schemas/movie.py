@@ -12,6 +12,7 @@ class GenreCreate(GenreBase):
 
 class GenreResponse(GenreBase):
     id: int
+    slug: str
 
     class Config:
         from_attributes = True
@@ -31,6 +32,9 @@ class MovieCreate(MovieBase):
 
 class MovieResponse(MovieBase):
     id: int
+    slug: str
+    average_rating: float = 0.0
+    rating_count: int = 0
     is_published: bool
     genres: List[GenreResponse] = []
 

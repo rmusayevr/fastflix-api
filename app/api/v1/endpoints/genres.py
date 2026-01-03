@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from slugify import slugify
 
 from app.models.movie import Genre
 from app.schemas.movie import GenreCreate, GenreResponse
@@ -15,12 +16,13 @@ async def create_genre(
     db: AsyncSession = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
-    # Check if exists
     result = await db.execute(select(Genre).where(Genre.name == genre_in.name))
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="Genre already exists")
 
-    new_genre = Genre(name=genre_in.name)
+    slug = slugify(genre_in.name)
+
+    new_genre = Genre(name=genre_in.name, slug=slug)
     db.add(new_genre)
     await db.commit()
     await db.refresh(new_genre)

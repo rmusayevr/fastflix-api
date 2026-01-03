@@ -3,6 +3,7 @@ from fastapi_limiter.depends import RateLimiter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from slugify import slugify
 from typing import Literal, List
 
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
@@ -56,8 +57,11 @@ async def create_movie(
     db: AsyncSession = Depends(get_db),
     current_admin=Depends(get_current_admin),
 ):
+    slug = slugify(movie_in.title)
+
     new_movie = Movie(
         title=movie_in.title,
+        slug=slug,
         description=movie_in.description,
         release_year=movie_in.release_year,
         video_url=movie_in.video_url,
