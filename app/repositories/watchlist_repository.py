@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from app.models.watchlist import WatchlistModel
-from app.models.movie import MovieModel
+from app.models.movie import Movie
 from sqlalchemy import desc
 
 
@@ -35,8 +35,8 @@ class WatchlistRepository:
         Get all movies in the user's watchlist, ordered by most recently added.
         """
         query = (
-            select(MovieModel)
-            .join(WatchlistModel, MovieModel.id == WatchlistModel.movie_id)
+            select(Movie)
+            .join(WatchlistModel, Movie.id == WatchlistModel.movie_id)
             .where(WatchlistModel.user_id == user_id)
             .order_by(desc(WatchlistModel.added_at))
             .offset(skip)

@@ -13,4 +13,4 @@ class WatchlistModel(Base):
     added_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     user = relationship("UserModel", back_populates="watchlist")
-    movie = relationship("MovieModel", back_populates="watchlist_users")
+    movie = relationship("Movie", back_populates="watchlist")

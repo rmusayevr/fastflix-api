@@ -34,3 +34,9 @@ class Movie(Base):
     is_published: Mapped[bool] = mapped_column(Boolean, default=True)
 
     genres = relationship("Genre", secondary=movie_genres_link, back_populates="movies")
+    ratings = relationship(
+        "RatingModel", back_populates="movie", cascade="all, delete-orphan"
+    )
+    watchlist = relationship(
+        "WatchlistModel", back_populates="movie", cascade="all, delete-orphan"
+    )

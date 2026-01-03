@@ -13,7 +13,7 @@ class RatingModel(Base):
     movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"))
 
     user = relationship("UserModel", back_populates="ratings")
-    movie = relationship("MovieModel", back_populates="ratings")
+    movie = relationship("Movie", back_populates="ratings")
 
     __table_args__ = (
         CheckConstraint("score >= 1 AND score <= 10", name="check_score_range"),

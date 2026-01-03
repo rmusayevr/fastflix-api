@@ -6,14 +6,14 @@ from app.services.movie_service import (
     update_movie_service,
     delete_movie_service,
 )
-from app.models.movie import MovieModel
+from app.models.movie import Movie
 from app.models.user import UserModel
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 
 
 @pytest.mark.asyncio
 async def test_get_movie_by_id_success(db_session, test_user):
-    movie = MovieModel(
+    movie = Movie(
         title="Interstellar",
         director="Christopher Nolan",
         user_id=test_user.id,
@@ -47,7 +47,7 @@ async def test_create_movie(db_session, test_user):
 
 @pytest.mark.asyncio
 async def test_update_movie_success(db_session, test_user):
-    movie = MovieModel(
+    movie = Movie(
         title="Old Title",
         director="Old Director",
         user_id=test_user.id,
@@ -96,7 +96,7 @@ async def test_update_movie_unauthorized(db_session, test_user):
     await db_session.commit()
     await db_session.refresh(other_user)
 
-    movie = MovieModel(
+    movie = Movie(
         title="Private Movie",
         director="Secret",
         user_id=other_user.id,
@@ -118,7 +118,7 @@ async def test_update_movie_unauthorized(db_session, test_user):
 
 @pytest.mark.asyncio
 async def test_delete_movie_success(db_session, test_user):
-    movie = MovieModel(title="To Delete", director="Me", user_id=test_user.id)
+    movie = Movie(title="To Delete", director="Me", user_id=test_user.id)
     db_session.add(movie)
     await db_session.commit()
 
@@ -139,7 +139,7 @@ async def test_delete_movie_unauthorized(db_session, test_user):
     await db_session.commit()
     await db_session.refresh(other_user)
 
-    movie = MovieModel(
+    movie = Movie(
         title="Not Mine",
         director="Someone Else",
         user_id=other_user.id,

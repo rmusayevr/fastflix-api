@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, asc, case, nullslast, or_
-from sqlalchemy.orm import aliased
-from app.models.movie import MovieModel
+from sqlalchemy.orm import aliased, selectinload
+from app.models.movie import Movie
 from app.schemas.movie import MovieCreate, MovieUpdate
 from app.models.rating import RatingModel
 
@@ -15,11 +15,11 @@ class MovieRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_movie(self, movie_data: MovieCreate, user_id: int) -> MovieModel:
+    async def create_movie(self, movie_data: MovieCreate, user_id: int) -> Movie:
         """
         Create a new movie in the database.
         """
-        movie = MovieModel(
+        movie = Movie(
             **movie_data.model_dump(),
             user_id=user_id,
         )
@@ -42,17 +42,18 @@ class MovieRepository:
         rating_sort = case((avg_rating > 0, avg_rating), else_=None)
 
         query = (
-            select(MovieModel, avg_rating)
-            .outerjoin(RatingModel, MovieModel.id == RatingModel.movie_id)
-            .group_by(MovieModel.id)
+            select(Movie, avg_rating)
+            .options(selectinload(Movie.genres))
+            .outerjoin(RatingModel, Movie.id == RatingModel.movie_id)
+            .group_by(Movie.id)
         )
 
         if search_query:
             search_pattern = f"%{search_query}%"
             query = query.where(
                 or_(
-                    MovieModel.title.ilike(search_pattern),
-                    MovieModel.description.ilike(search_pattern),
+                    Movie.title.ilike(search_pattern),
+                    Movie.description.ilike(search_pattern),
                 )
             )
 
@@ -62,9 +63,9 @@ class MovieRepository:
         if sort_by == "rating":
             sort_column = rating_sort
         elif sort_by == "title":
-            sort_column = MovieModel.title
+            sort_column = Movie.title
         else:
-            sort_column = MovieModel.id
+            sort_column = Movie.id
 
         query = query.order_by(
             nullslast(desc(sort_column))
@@ -82,9 +83,9 @@ class MovieRepository:
             movies.append(movie)
 
         subquery_stmt = (
-            select(MovieModel.id)
-            .outerjoin(RatingModel, MovieModel.id == RatingModel.movie_id)
-            .group_by(MovieModel.id)
+            select(Movie.id)
+            .outerjoin(RatingModel, Movie.id == RatingModel.movie_id)
+            .group_by(Movie.id)
         )
 
         if min_rating is not None:
@@ -93,8 +94,8 @@ class MovieRepository:
         if search_query:
             subquery_stmt = subquery_stmt.where(
                 or_(
-                    MovieModel.title.ilike(search_pattern),
-                    MovieModel.description.ilike(search_pattern),
+                    Movie.title.ilike(search_pattern),
+                    Movie.description.ilike(search_pattern),
                 )
             )
 
@@ -105,17 +106,15 @@ class MovieRepository:
 
         return movies, total
 
-    async def get_by_id(self, movie_id: int) -> MovieModel | None:
+    async def get_by_id(self, movie_id: int) -> Movie | None:
         """
         Get a movie by its ID.
         """
-        query = select(MovieModel).where(MovieModel.id == movie_id)
+        query = select(Movie).where(Movie.id == movie_id)
         result = await self.session.execute(query)
         return result.scalars().first()
 
-    async def update_movie(
-        self, movie: MovieModel, update_data: MovieUpdate
-    ) -> MovieModel:
+    async def update_movie(self, movie: Movie, update_data: MovieUpdate) -> Movie:
         """
         Update a movie in the database.
         """
@@ -128,24 +127,22 @@ class MovieRepository:
         await self.session.refresh(movie)
         return movie
 
-    async def delete_movie(self, movie: MovieModel) -> None:
+    async def delete_movie(self, movie: Movie) -> None:
         """
         Delete a movie from the database.
         """
         await self.session.delete(movie)
         await self.session.commit()
 
-    async def search_movies(self, query_str: str) -> list[MovieModel]:
+    async def search_movies(self, query_str: str) -> list[Movie]:
         search_vector = func.to_tsvector(
             "english",
-            func.coalesce(MovieModel.title, "")
-            + " "
-            + func.coalesce(MovieModel.description, ""),
+            func.coalesce(Movie.title, "") + " " + func.coalesce(Movie.description, ""),
         )
 
         search_query = func.websearch_to_tsquery("english", query_str)
 
-        statement = select(MovieModel).where(search_vector.op("@@")(search_query))
+        statement = select(Movie).where(search_vector.op("@@")(search_query))
 
         result = await self.session.execute(statement)
         return result.scalars().all()
@@ -158,16 +155,16 @@ class MovieRepository:
         Rating2 = aliased(RatingModel)
 
         query = (
-            select(MovieModel)
-            .join(Rating2, MovieModel.id == Rating2.movie_id)
+            select(Movie)
+            .join(Rating2, Movie.id == Rating2.movie_id)
             .join(Rating1, Rating1.user_id == Rating2.user_id)
             .where(
                 Rating1.movie_id == movie_id,
                 Rating1.score >= 8,
                 Rating2.score >= 8,
-                MovieModel.id != movie_id,
+                Movie.id != movie_id,
             )
-            .group_by(MovieModel.id)
+            .group_by(Movie.id)
             .order_by(desc(func.count(Rating2.user_id)))
             .limit(limit)
         )

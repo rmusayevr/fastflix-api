@@ -17,7 +17,6 @@ class UserModel(Base):
     avatar: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
-    movies = relationship("MovieModel", back_populates="owner")
     ratings: Mapped[List["RatingModel"]] = relationship(
         "RatingModel", back_populates="user"
     )

@@ -9,7 +9,7 @@ from app.core.redis import redis_client
 from app.repositories.movie_repository import MovieRepository
 from app.schemas.common import PageResponse
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
-from app.models.movie import MovieModel
+from app.models.movie import Movie
 from app.schemas.rating import RatingCreate
 from app.repositories.rating_repository import RatingRepository
 
@@ -68,7 +68,7 @@ async def get_all_movies_service(
 
 async def create_movie_service(
     movie: MovieCreate, user_id: int, db: AsyncSession
-) -> MovieModel:
+) -> Movie:
     repo = MovieRepository(db)
     new_movie = await repo.create_movie(movie, user_id)
 
@@ -78,7 +78,7 @@ async def create_movie_service(
     return new_movie
 
 
-async def get_movie_by_id_service(movie_id: int, db: AsyncSession) -> MovieModel:
+async def get_movie_by_id_service(movie_id: int, db: AsyncSession) -> Movie:
     repo = MovieRepository(db)
     movie = await repo.get_by_id(movie_id)
     if not movie:
@@ -88,7 +88,7 @@ async def get_movie_by_id_service(movie_id: int, db: AsyncSession) -> MovieModel
 
 async def update_movie_service(
     movie_id: int, update_data: MovieUpdate, user_id: int, db: AsyncSession
-) -> MovieModel:
+) -> Movie:
     repo = MovieRepository(db)
 
     movie = await repo.get_by_id(movie_id)
