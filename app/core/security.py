@@ -39,3 +39,35 @@ def create_access_token(
     )
 
     return encoded_jwt
+
+
+def create_password_reset_token(email: str) -> str:
+    """
+    Generates a JWT token specifically for password reset.
+    Expires in 15 minutes.
+    """
+    delta = timedelta(minutes=15)
+    now = datetime.now(timezone.utc)
+    expires = now + delta
+
+    encoded_jwt = jwt.encode(
+        {"exp": expires, "nbf": now, "sub": email, "type": "reset"},
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+    return encoded_jwt
+
+
+def verify_password_reset_token(token: str) -> str | None:
+    """
+    Decodes the token and returns the email if valid.
+    """
+    try:
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        if decoded_token.get("type") != "reset":
+            return None
+        return decoded_token["sub"]
+    except jwt.PyJWTError:
+        return None

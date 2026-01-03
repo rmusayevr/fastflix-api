@@ -2,13 +2,20 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies import get_db, get_current_user
 from app.schemas.token import Token
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, NewPassword
 from app.services.user_service import register_user_service, authenticate_user_service
-from app.core.security import create_access_token
+from app.core.security import (
+    create_access_token,
+    create_password_reset_token,
+    verify_password_reset_token,
+    get_password_hash,
+)
+from app.tasks.email_tasks import send_reset_password_email
 from app.models.user import UserModel
 from app.tasks.email_tasks import send_welcome_email
 from app.utils.storage import upload_file_to_s3
@@ -75,3 +82,42 @@ async def upload_avatar(
     await db.refresh(current_user)
 
     return current_user
+
+
+@router.post("/password-recovery/{email}")
+async def recover_password(email: str, db: AsyncSession = Depends(get_db)):
+    """
+    Trigger password recovery email.
+    """
+    result = await db.execute(select(UserModel).where(UserModel.email == email))
+    user = result.scalars().first()
+
+    if not user:
+        return {"msg": "If this email exists, a recovery link has been sent."}
+
+    token = create_password_reset_token(email=user.email)
+
+    send_reset_password_email.delay(user.email, token, user.email or "User")
+
+    return {"msg": "If this email exists, a recovery link has been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(body: NewPassword, db: AsyncSession = Depends(get_db)):
+    """
+    Reset password using the token.
+    """
+    email = verify_password_reset_token(body.token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+
+    result = await db.execute(select(UserModel).where(UserModel.email == email))
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.hashed_password = get_password_hash(body.new_password)
+    await db.commit()
+
+    return {"msg": "Password updated successfully"}

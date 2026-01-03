@@ -1,7 +1,13 @@
 import logging
+from pathlib import Path
 from app.core.celery_app import celery_app
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from app.core.config import settings
+from jinja2 import Environment, FileSystemLoader
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATE_FOLDER = BASE_DIR / "templates"
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.SMTP_USER or "",
@@ -46,3 +52,31 @@ def send_welcome_email(email_to: str):
 
     logging.info(f"Email sent to {email_to}")
     return f"Email sent to {email_to}"
+
+
+@celery_app.task(name="send_reset_password_email")
+def send_reset_password_email(email_to: str, token: str, username: str):
+    import asyncio
+
+    env = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER))
+    template = env.get_template("reset_password.html")
+
+    reset_link = f"{settings.DOMAIN}/reset-password?token={token}"
+    html_content = template.render(username=username, link=reset_link, validity=15)
+    message = MessageSchema(
+        subject="FastFlix Password Recovery",
+        recipients=[email_to],
+        body=html_content,
+        subtype=MessageType.html,
+    )
+
+    fm = FastMail(conf)
+
+    loop = asyncio.get_event_loop()
+
+    if loop.is_running():
+        asyncio.create_task(fm.send_message(message))
+    else:
+        loop.run_until_complete(fm.send_message(message))
+
+    logging.info(f"Reset email sent to {email_to}")
