@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_db, get_current_user
+from app.api.dependencies import get_db, get_current_user, get_current_admin
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserResponse, NewPassword
 from app.services.user_service import register_user_service, authenticate_user_service
@@ -121,3 +121,8 @@ async def reset_password(body: NewPassword, db: AsyncSession = Depends(get_db)):
     await db.commit()
 
     return {"msg": "Password updated successfully"}
+
+
+@router.get("/admin-only")
+async def admin_dashboard(current_admin: UserModel = Depends(get_current_admin)):
+    return {"msg": f"Welcome, Admin {current_admin.email}!"}

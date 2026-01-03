@@ -47,3 +47,17 @@ async def get_current_user(
         raise credentials_exception
 
     return user
+
+
+async def get_current_admin(
+    current_user: UserModel = Depends(get_current_user),
+) -> UserModel:
+    """
+    Dependency that ensures the user is a Superuser/Admin.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges",
+        )
+    return current_user
