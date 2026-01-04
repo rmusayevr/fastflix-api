@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>FastFlix Admin Console</title>
+    <style>
+        body {
+            background: #0d1117;
+            color: #c9d1d9;
+            font-family: monospace;
+            padding: 20px;
+        }
+
+        #terminal {
+            background: #000;
+            border: 1px solid #30363d;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .line {
+            padding: 4px 0;
+            border-bottom: 1px solid #161b22;
+        }
+
+        .timestamp {
+            color: #8b949e;
+            margin-right: 10px;
+        }
+
+        .success {
+            color: #2ea043;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🖥️ Live System Logs (SSE)</h1>
+    <p>Simulating a live backup stream from the server.</p>
+
+    <input type="text" id="token" placeholder="Paste Admin Token Here" style="width: 300px; padding: 8px;">
+    <button onclick="startStream()">Start Stream</button>
+
+    <div id="terminal" style="margin-top: 20px;">
+        <div class="line">Waiting for connection...</div>
+    </div>
+
+    <script>
+        function startStream() {
+            const token = document.getElementById("token").value;
+            if (!token) { alert("Need Admin Token!"); return; }
+
+            const terminal = document.getElementById("terminal");
+            terminal.innerHTML = "";
+
+
+            fetch("http://localhost:8000/api/v1/admin/stream-logs", {
+                headers: { "Authorization": "Bearer " + token }
+            }).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                function read() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            log("Stream closed.");
+                            return;
+                        }
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split("\n\n");
+                        lines.forEach(line => {
+                            if (line.startsWith("data: ")) {
+                                log(line.replace("data: ", ""));
+                            }
+                        });
+                        read();
+                    });
+                }
+                read();
+            }).catch(err => log("Error: " + err));
+        }
+
+        function log(msg) {
+            const terminal = document.getElementById("terminal");
+            const div = document.createElement("div");
+            div.className = "line";
+
+            if (msg.includes("completed")) div.classList.add("success");
+
+            const time = new Date().toLocaleTimeString();
+            div.innerHTML = `<span class="timestamp">[${time}]</span> ${msg}`;
+
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>

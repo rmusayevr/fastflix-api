@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.core.redis import redis_client
 from app.api.v1.router import api_router
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -66,3 +67,12 @@ async def health_check():
         "app_name": settings.PROJECT_NAME,
         "env": settings.ENVIRONMENT,
     }
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
