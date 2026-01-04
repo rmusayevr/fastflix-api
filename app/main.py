@@ -1,5 +1,7 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi_limiter import FastAPILimiter
 
@@ -8,6 +10,9 @@ from app.core.redis import redis_client
 from app.api.v1.router import api_router
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 from fastapi.middleware.cors import CORSMiddleware
+
+
+os.makedirs("static/exports", exist_ok=True)
 
 
 @asynccontextmanager
@@ -76,3 +81,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")

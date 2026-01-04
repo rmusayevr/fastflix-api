@@ -48,6 +48,20 @@ class Settings(BaseSettings):
     DOMAIN: str = "http://localhost:3000"
 
     @property
+    def CELERY_BROKER_URL(self) -> str:
+        """Construct the Redis URL for Celery Broker"""
+        if self.REDIS_URL:
+            return self.REDIS_URL
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    @property
+    def CELERY_RESULT_BACKEND(self) -> str:
+        """Construct the Redis URL for Celery Results"""
+        if self.REDIS_URL:
+            return self.REDIS_URL
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    @property
     def DATABASE_URL(self) -> str:
         base_url = (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"

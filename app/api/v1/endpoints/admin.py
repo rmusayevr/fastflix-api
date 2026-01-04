@@ -3,6 +3,7 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from app.api.dependencies import get_current_admin
+from app.tasks.export_tasks import export_movies_task
 
 router = APIRouter()
 
@@ -35,3 +36,13 @@ async def stream_logs(current_admin=Depends(get_current_admin)):
     Client keeps connection open and receives updates.
     """
     return StreamingResponse(log_generator(), media_type="text/event-stream")
+
+
+@router.post("/export-movies")
+async def trigger_export(current_admin=Depends(get_current_admin)):
+    """
+    Trigger the background export task.
+    """
+    export_movies_task.delay(current_admin.id)
+
+    return {"message": "Export started! We will notify you when it is ready."}
