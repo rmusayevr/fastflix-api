@@ -1,50 +1,85 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>FastFlix WebSocket Test</title>
+    <title>Secure WebSocket Test</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; }
-        #messages { margin-top: 20px; border: 1px solid #333; padding: 10px; height: 300px; overflow-y: scroll; background: #000; }
-        .msg { padding: 5px; border-bottom: 1px solid #222; }
-        .success { color: #00ff00; }
-        .error { color: #ff0000; }
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        #messages {
+            margin-top: 20px;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            background: #000;
+        }
+
+        .msg {
+            padding: 5px;
+            border-bottom: 1px solid #222;
+        }
+
+        input {
+            padding: 8px;
+            width: 300px;
+        }
+
+        button {
+            padding: 8px;
+            cursor: pointer;
+        }
     </style>
 </head>
+
 <body>
-    <h2>🔔 FastFlix Notification Tester</h2>
-    <div id="status">Connecting...</div>
+    <h2>🔐 Secure Notification Tester</h2>
+
+    <div>
+        <input type="text" id="tokenInput" placeholder="Paste Access Token Here...">
+        <button onclick="connect()">Connect</button>
+    </div>
+
+    <div id="status" style="margin-top: 10px; color: #888;">Not Connected</div>
     <div id="messages"></div>
 
     <script>
-        const ws = new WebSocket("ws://localhost:8000/api/v1/notifications/ws");
+        let ws = null;
         const statusDiv = document.getElementById("status");
         const messagesDiv = document.getElementById("messages");
 
-        ws.onopen = function() {
-            statusDiv.innerHTML = "✅ Connected to WebSocket!";
-            statusDiv.className = "success";
-        };
+        function connect() {
+            const token = document.getElementById("tokenInput").value.trim();
+            if (!token) { alert("Please paste a token!"); return; }
 
-        ws.onmessage = function(event) {
-            const msg = document.createElement("div");
-            msg.className = "msg";
-            msg.innerText = "📩 " + event.data;
-            messagesDiv.appendChild(msg);
-            
-            if (Notification.permission === "granted") {
-                new Notification("FastFlix", { body: event.data });
-            }
-        };
+            ws = new WebSocket("ws://localhost:8000/api/v1/notifications/ws?token=" + token);
 
-        ws.onclose = function() {
-            statusDiv.innerHTML = "❌ Disconnected";
-            statusDiv.className = "error";
-        };
+            ws.onopen = function () {
+                statusDiv.innerText = "✅ Connected!";
+                statusDiv.style.color = "#00ff00";
+            };
 
-        // Request notification permission for the browser
-        if (Notification.permission !== "denied") {
-            Notification.requestPermission();
+            ws.onmessage = function (event) {
+                const msg = document.createElement("div");
+                msg.className = "msg";
+                msg.innerText = "📩 " + event.data;
+                messagesDiv.appendChild(msg);
+            };
+
+            ws.onclose = function (event) {
+                statusDiv.innerText = "❌ Disconnected (Code: " + event.code + ")";
+                statusDiv.style.color = "#ff0000";
+                if (event.code === 1008) {
+                    alert("Auth Failed! Invalid or Expired Token.");
+                }
+            };
         }
     </script>
 </body>
+
 </html>

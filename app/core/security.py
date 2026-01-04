@@ -41,6 +41,20 @@ def create_access_token(
     return encoded_jwt
 
 
+def verify_token_access(token: str) -> dict | None:
+    """
+    Decodes an access token and validates its signature and expiration.
+    Returns the payload if valid, None otherwise.
+    """
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        return payload
+    except jwt.PyJWTError:
+        return None
+
+
 def create_password_reset_token(email: str) -> str:
     """
     Generates a JWT token specifically for password reset.
