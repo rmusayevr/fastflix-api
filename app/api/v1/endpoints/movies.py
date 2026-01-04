@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from slugify import slugify
 from typing import Literal, List
 
+from app.core.websockets import manager
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.api.dependencies import get_db, get_current_user, get_current_admin
 from app.models.user import UserModel
@@ -89,6 +90,8 @@ async def create_movie(
     )
     result = await db.execute(stmt)
     fresh_movie = result.scalars().first()
+
+    await manager.broadcast(f"🎬 New Release: {fresh_movie.title}")
 
     return fresh_movie
 
