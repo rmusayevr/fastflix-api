@@ -13,6 +13,7 @@ from app.models.movie import Movie, Genre  # noqa: F401
 from app.models.user import UserModel  # noqa: F401
 from app.models.rating import RatingModel  # noqa: F401
 from app.models.watchlist import WatchlistModel  # noqa: F401
+from app.models.notification import NotificationModel  # noqa: F401
 
 config = context.config
 

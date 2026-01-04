@@ -1,9 +1,15 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
+from typing import List
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status, Depends
 from sqlalchemy import select
-from app.core.websockets import manager
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependencies import get_db, get_current_user
 from app.core.security import verify_token_access
+from app.core.websockets import manager
 from app.db.session import AsyncSessionLocal
 from app.models.user import UserModel
+from app.services.notification_service import NotificationService
+from app.schemas.notification import NotificationResponse
 
 router = APIRouter()
 
@@ -32,16 +38,13 @@ async def get_user_from_socket(token: str) -> int | None:
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(
-    websocket: WebSocket, token: str = Query(...)
-):
+async def websocket_endpoint(websocket: WebSocket, token: str = Query(...)):
     user_id = await get_user_from_socket(token)
 
     if not user_id:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
-    # Connection accepted
     await manager.connect(user_id, websocket)
 
     try:
@@ -53,12 +56,26 @@ async def websocket_endpoint(
         manager.disconnect(user_id)
 
 
-# --- Test Endpoint for Targeted Notifications ---
 @router.post("/test-trigger/{user_id}")
-async def trigger_private_notification(user_id: int, message: str):
+async def trigger_private_notification(
+    user_id: int, message: str, db: AsyncSession = Depends(get_db)
+):
     """
     Simulates a system event (like 'Your export is ready')
     sending a message ONLY to this specific user.
     """
-    await manager.send_personal_message(f"🔔 Private: {message}", user_id)
-    return {"status": "Message sent"}
+    await NotificationService.send_notification(user_id, message, db)
+    return {"status": "Notification sent and saved"}
+
+
+@router.get("/", response_model=List[NotificationResponse])
+async def get_my_notifications(
+    skip: int = 0,
+    limit: int = 20,
+    current_user: UserModel = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Fetch notification history."""
+    return await NotificationService.get_user_notifications(
+        current_user.id, db, skip, limit
+    )

@@ -31,3 +31,6 @@ class UserModel(Base, TimestampMixin):
     watchlist: Mapped["WatchlistModel"] = relationship(
         "WatchlistModel", back_populates="user"
     )
+    notifications = relationship(
+        "NotificationModel", back_populates="user", cascade="all, delete-orphan"
+    )
