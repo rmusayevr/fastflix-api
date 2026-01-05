@@ -107,7 +107,7 @@ services:
       - celery_worker
     networks:
       - fastflix-network
-  
+
   celery_beat:
     build: .
     command: celery -A app.core.celery_app beat -l info
@@ -146,6 +146,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - fastflix-network
 
   createbuckets:
     image: minio/mc
@@ -159,6 +161,8 @@ services:
       /usr/bin/mc anonymous set public myminio/${S3_BUCKET_NAME};
       exit 0;
       "
+    networks:
+      - fastflix-network
 
   mailpit:
     image: axllent/mailpit
@@ -167,6 +171,8 @@ services:
       - "8025:8025"
       - "1025:1025"
     restart: always
+    networks:
+      - fastflix-network
 
 volumes:
   postgres_data:

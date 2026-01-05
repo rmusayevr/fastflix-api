@@ -11,6 +11,7 @@ celery_app = Celery(
         "app.tasks.email_tasks",
         "app.tasks.export_tasks",
         "app.tasks.scheduled_tasks",
+        "app.tasks.notification_tasks",
     ],
 )
 
@@ -21,10 +22,9 @@ celery_app.conf.task_routes = {
 }
 
 celery_app.conf.beat_schedule = {
-    "generate-daily-report-every-minute": {
-        "task": "daily_report",
-        "schedule": crontab(hour=10, minute=30),
+    "refresh-trending-every-minute": {
+        "task": "refresh_trending_cache",
+        "schedule": crontab(day_of_week=1, hour=0, minute=0),
     },
 }
-
 celery_app.conf.timezone = "UTC"

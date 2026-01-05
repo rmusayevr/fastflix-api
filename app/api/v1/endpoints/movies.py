@@ -1,14 +1,15 @@
+import json
+from slugify import slugify
+from typing import Literal, List
 from fastapi import APIRouter, Depends, status, Query, HTTPException
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from slugify import slugify
-from typing import Literal, List
 
-from app.core.websockets import manager
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.api.dependencies import get_db, get_current_user, get_current_admin
+from app.core.redis import get_redis_client
 from app.models.user import UserModel
 from app.models.movie import Movie, Genre
 from app.services.movie_service import (
@@ -19,6 +20,7 @@ from app.services.movie_service import (
 from app.schemas.common import PageResponse
 from app.schemas.rating import RatingResponse, RatingCreate
 from app.services.watchlist_service import toggle_watchlist_service
+from app.tasks.notification_tasks import broadcast_notification_task
 
 router = APIRouter()
 
@@ -91,9 +93,45 @@ async def create_movie(
     result = await db.execute(stmt)
     fresh_movie = result.scalars().first()
 
-    await manager.broadcast(f"🎬 New Release: {fresh_movie.title}")
+    broadcast_notification_task.delay(f"🎬 New Release: {fresh_movie.title}")
 
     return fresh_movie
+
+
+@router.get("/trending", response_model=list[MovieResponse])
+async def get_trending_movies(db: AsyncSession = Depends(get_db)):
+    """
+    Fetches the Top 5 Trending movies from the Redis Cache.
+    If cache is empty (e.g. first run), falls back to DB or returns empty.
+    """
+    redis = get_redis_client()
+    cached_data = await redis.get("trending_movies")
+
+    movie_ids = []
+
+    if cached_data:
+        data = json.loads(cached_data)
+        movie_ids = data.get("movie_ids", [])
+        print(f"⚡ Cache Hit! Serving IDs: {movie_ids}")
+    else:
+        print("⚠️ Cache Miss! (Worker hasn't run yet)")
+        return []
+
+    if movie_ids:
+        stmt = (
+            select(Movie)
+            .options(selectinload(Movie.genres))
+            .where(Movie.id.in_(movie_ids))
+        )
+        result = await db.execute(stmt)
+        movies = result.scalars().all()
+
+        movies_map = {m.id: m for m in movies}
+        ordered_movies = [movies_map[mid] for mid in movie_ids if mid in movies_map]
+
+        return ordered_movies
+
+    return []
 
 
 @router.get("/{movie_id}", response_model=MovieResponse)

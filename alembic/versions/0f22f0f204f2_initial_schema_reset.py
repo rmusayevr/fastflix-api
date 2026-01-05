@@ -1,17 +1,19 @@
-"""change_relation_name
+"""initial_schema_reset
 
-Revision ID: 9e61c17ac715
-Revises: c2933bd58b06
-Create Date: 2026-01-04 16:44:55.760722
+Revision ID: 0f22f0f204f2
+Revises: 
+Create Date: 2026-01-05 12:48:22.850533
 
 """
-
 from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "9e61c17ac715"
-down_revision: Union[str, Sequence[str], None] = "c2933bd58b06"
+revision: str = '0f22f0f204f2'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

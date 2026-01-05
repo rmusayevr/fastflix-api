@@ -41,11 +41,12 @@ async def subscribe_to_notifications():
                     user_id = data.get("user_id")
                     msg_text = data.get("message")
 
-                    if user_id and msg_text:
+                    if user_id == "ALL":
+                        print(f"📢 Broadcasting to all users: {msg_text}")
+                        await manager.broadcast(msg_text)
+                    elif user_id:
                         await manager.send_personal_message(msg_text, user_id)
 
-                except json.JSONDecodeError:
-                    print(f"⚠️ Invalid JSON received in Redis: {message['data']}")
                 except Exception as e:
                     print(f"⚠️ Error processing Redis message: {e}")
 

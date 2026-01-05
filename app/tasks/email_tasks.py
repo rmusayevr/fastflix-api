@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from pathlib import Path
 from app.core.celery_app import celery_app
@@ -25,15 +26,8 @@ conf = ConnectionConfig(
 @celery_app.task(name="send_welcome_email")
 def send_welcome_email(email_to: str):
     """
-    Celery task to send a welcome email.
-    Note: We must use sync wrapper or run async code properly.
-    FastMail is async, but Celery is traditionally sync.
-    We will use 'async_to_sync' or just standard python blocking for simplicity if needed,
-    but FastMail is designed for async.
-
-    Workaround: We run the async sending function inside a sync loop.
+    Celery task to send a welcome email using FastMail (Mailpit).
     """
-    import asyncio
 
     message = MessageSchema(
         subject="Welcome to FastFlix!",
@@ -44,14 +38,13 @@ def send_welcome_email(email_to: str):
 
     fm = FastMail(conf)
 
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        asyncio.create_task(fm.send_message(message))
-    else:
-        loop.run_until_complete(fm.send_message(message))
-
-    logging.info(f"Email sent to {email_to}")
-    return f"Email sent to {email_to}"
+    try:
+        asyncio.run(fm.send_message(message))
+        logging.info(f"✅ Email sent to {email_to}")
+        return f"Email sent to {email_to}"
+    except Exception as e:
+        logging.error(f"❌ Failed to send email: {e}")
+        raise e
 
 
 @celery_app.task(name="send_reset_password_email")

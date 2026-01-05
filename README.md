@@ -4,11 +4,38 @@ A progressive backend engineering project to build a production-grade Movie Reco
 
 This repository follows a strict 100-day "Deep Dive" roadmap, transitioning from Django patterns to high-performance FastAPI architecture.
 
+## 🏗️ System Architecture
+
+FastFlix is not just a CRUD API. It is a distributed system designed for scale.
+
+```mermaid
+graph TD
+    Client(Client Apps) --> LB[Load Balancer / Nginx]
+    LB --> API[FastAPI Cluster]
+    
+    subgraph Data Layer
+        API --> DB[(PostgreSQL Primary)]
+        API --> Redis[(Redis Cache & Pub/Sub)]
+    end
+    
+    subgraph Background Processing
+        API -- "Async Tasks" --> Celery[Celery Workers]
+        Beat[Celery Beat] -- "Scheduled Jobs" --> Celery
+        Celery --> Email[SMTP / SendGrid]
+    end
+    
+    subgraph Real-Time
+        Redis -- "Pub/Sub Events" --> API
+        API -- "WebSockets" --> Client
+    end
+```
+
 ## 🎯 Project Goals
-- **Architecture:** Moving from Django's "batteries-included" to FastAPI's explicit architecture.
-- **Engineering:** Implementing Repository pattern, Dependency Injection, and Async patterns.
-- **Quality Assurance:** Comprehensive testing suite with robust code coverage.
-- **DevOps:** Building a 100% automated CI/CD pipeline and containerized production environment.
+- **Architecture:** Explicit Repository Pattern and Dependency Injection (moving away from "batteries-included" magic).
+- **Performance:** Fully asynchronous I/O (AsyncPG, Redis) for high-concurrency handling.
+- **Reliability:** Comprehensive testing suite (Pytest + HTTPX) with automated CI/CD pipelines
+- **Scalability:** Event-driven background processing and real-time WebSocket broadcasting.
+- **DevOps:** Containerized production environment (Docker Compose) with automated health checks.
 - **Documentation:** Following a "Learning in Public" philosophy.
 
 ## 🛠 Tech Stack
@@ -79,19 +106,24 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 
 
 ## 🎥 Core Features
-- **Recommendation Engine:** Item-based collaborative filtering (SQL-based) to suggest movies based on "Users who liked this also liked..." logic.
-- **User Watchlists:** Many-to-Many relationship allowing users to save movies for later.
-- **Ratings System:** Users can rate movies (1-10 stars), affecting global averages.
-- **Background Tasks:** Asynchronous email delivery and heavy processing using Celery & Redis.
-- **Rate Limiting:** Redis-backed throttling to prevent API abuse.
 
-## 🔐 Security Features
-- **Authentication:** OAuth2 Password Bearer flow.
-- **Authorization:** Role-based ownership logic (Users can only edit their own data).
-- **Cryptography:**
-  - Passwords hashed via `bcrypt` (using `passlib`).
-  - Stateless authentication via JWT (HS256).
+### 🍿 Content Engine
+- **Search:** Native PostgreSQL Full-Text Search (TSVector) for high-speed queries.
+- **Recommendations:** "Trending Now" cache warmer and "Users also watched" collaborative filtering.
+- **Smart Loading:** Optimizations like Select-in-Loading to prevent N+1 query problems.
+
+### ⚡ Real-Time & Background
+
+- **Live Notifications:** WebSockets broadcast "New Movie" alerts to all connected users instantly.
+- **Async Emails:** Welcome emails and alerts are offloaded to Celery workers (non-blocking).
+- **Scheduled Tasks:** Celery Beat runs weekly aggregation jobs to update the "Trending" cache.
+
+### 🔐 Security Features
+- **Authentication (OAuth2):** Stateless JWT authentication (Access & Refresh tokens).
+- **Authorization (RBAC):** Role-Based Access Control (Admin vs. User scopes).
+- **Cryptography:** Passwords hashed via `bcrypt` (using `passlib`).
 - **Dependencies:** `get_current_user` allows protecting routes with a single line of code.
+- **Rate Limiting:** Redis-backed throttling (e.g., "5 login attempts per minute").
 
 ## 🗺️ Roadmap & Progress
 
@@ -127,36 +159,37 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **Cloud Migration:** Deployed to Railway with Neon Postgres (SSL enforced).
 
 ✅ **Phase 6: Advanced Logic & Performance**
-- [x] **Watchlists**: Many-to-Many relationships implementation.
-- [x] **Recommendations**: SQL-based collaborative filtering algorithm.
-- [x] **Background Workers**: Celery + Redis for async tasks (Emails).
-- [x] **Rate Limiting**: FastAPI Limiter with Redis backend.
-- [x] **Model Optimization**: 
+- [x] **Watchlists:** Many-to-Many relationships implementation.
+- [x] **Recommendations:** SQL-based collaborative filtering algorithm.
+- [x] **Background Workers:** Celery + Redis for async tasks (Emails).
+- [x] **Rate Limiting:** FastAPI Limiter with Redis backend.
+- [x] **Model Optimization:**
     - Native PostgreSQL Search Vectors (TSVector + GIN Index).
     - Denormalized Ratings for O(1) read performance.
     - SEO-friendly Slugs & Audit Timestamps.
     - Async CLI Data Importer with Genre Mapping.
 
-🔄 **Phase 7: Real-Time & Interaction (Days 60-68)**
-- [ ] **WebSockets**: Real-time notifications system.
-- [ ] **Server-Sent Events (SSE)**: Live status streaming.
-- [ ] **Advanced Celery**: Task chaining and prioritization.
+✅ **Phase 7: Real-Time & Workers**
+- [x] **WebSockets:** Live notification broadcasting.
+- [x] **Celery Workers:** Background email delivery.
+- [x] **Celery Beat:** Scheduled cache warming (Trending Movies).
+- [x] **Redis Pub/Sub:** Event-driven messaging.
 
-🔄 **Phase 8: Observability & Monitoring (Days 69-78)**
+🔄 **Phase 8: Observability & Monitoring**
 - [ ] **Structured Logging**: JSON logging for production parsing.
 - [ ] **APM**: Integration with Sentry/OpenTelemetry.
 - [ ] **Metrics**: Prometheus & Grafana dashboard integration.
 
-🔄 **Phase 9: Security Hardening (Days 79-88)**
+🔄 **Phase 9: Security Hardening**
 - [ ] **OAuth2**: Social Login (Google/GitHub).
 - [ ] **RBAC**: Advanced Role-Based Access Control permissions.
 - [ ] **Security Headers**: Middleware hardening (CORS, HSTS).
 
-🔄 **Phase 10: Scale & Search (Days 89-95)**
+🔄 **Phase 10: Scale & Search**
 - [ ] **Search Engine**: ElasticSearch/MeiliSearch integration.
 - [ ] **DB Tuning**: Query analysis and index optimization.
 
-🏁 **Phase 11: Final Polish (Days 96-100)**
+🏁 **Phase 11: Final Polish**
 - [ ] **Documentation**: OpenAPI examples & Architecture diagrams.
 - [ ] **Load Testing**: High-concurrency stress testing.
 - [ ] **Final Release**: Production deployment v1.0.
@@ -164,7 +197,7 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 ## 📂 Project Structure
 ```
 fastflix-api/
-├── .github/workflows/  # CI/CD Pipelines (GitHub Actions)
+├── .github/            # CI/CD Pipelines (GitHub Actions)
 ├── app/
 │   ├── api/            # Routes & Endpoints (v1)
 │   ├── core/           # Config, Security, Celery & Exceptions

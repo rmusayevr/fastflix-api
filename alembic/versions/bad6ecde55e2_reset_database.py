@@ -1,17 +1,19 @@
-"""add_link_movie_ratings
+"""reset_database
 
-Revision ID: 90a164b1d36b
-Revises: 527662db6d31
-Create Date: 2026-01-03 17:40:42.630102
+Revision ID: bad6ecde55e2
+Revises: 0f22f0f204f2
+Create Date: 2026-01-05 12:50:24.384595
 
 """
-
 from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "90a164b1d36b"
-down_revision: Union[str, Sequence[str], None] = "527662db6d31"
+revision: str = 'bad6ecde55e2'
+down_revision: Union[str, Sequence[str], None] = '0f22f0f204f2'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
