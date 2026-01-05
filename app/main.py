@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import sentry_sdk
 from contextlib import asynccontextmanager
 
 from fastapi import HTTPException, status, FastAPI, Request
@@ -79,6 +80,15 @@ async def lifespan(app: FastAPI):
     await redis_limiter.close()
 
 
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+        environment=settings.ENVIRONMENT,
+    )
+
+
 def create_application() -> FastAPI:
     application = FastAPI(
         title=settings.PROJECT_NAME,
@@ -152,6 +162,11 @@ async def health_check():
         )
 
     return health_status
+
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
 
 
 @app.exception_handler(MovieNotFoundException)

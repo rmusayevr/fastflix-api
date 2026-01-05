@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     FLOWER_ADMIN: str
     FLOWER_PASSWORD: str
 
+    SENTRY_DSN: str | None = None
+
     DOMAIN: str = "http://localhost:3000"
 
     @property
