@@ -102,6 +102,7 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - FLOWER_ADMIN=${FLOWER_ADMIN}
       - FLOWER_PASSWORD=${FLOWER_PASSWORD}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     depends_on:
       - redis
       - celery_worker
@@ -123,6 +124,7 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - FLOWER_ADMIN=${FLOWER_ADMIN}
       - FLOWER_PASSWORD=${FLOWER_PASSWORD}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
     depends_on:
       - redis
       - db
@@ -171,6 +173,30 @@ services:
       - "8025:8025"
       - "1025:1025"
     restart: always
+    networks:
+      - fastflix-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+    depends_on:
+      - web
+    networks:
+      - fastflix-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    depends_on:
+      - prometheus
     networks:
       - fastflix-network
 

@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     FLOWER_PASSWORD: str
 
     SENTRY_DSN: str | None = None
+    
+    GF_SECURITY_ADMIN_PASSWORD: str
 
     DOMAIN: str = "http://localhost:3000"
 

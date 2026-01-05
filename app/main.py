@@ -3,6 +3,7 @@ import json
 import os
 import sentry_sdk
 from contextlib import asynccontextmanager
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from fastapi import HTTPException, status, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -115,6 +116,18 @@ def create_application() -> FastAPI:
 
 
 app = create_application()
+
+instrumentator = Instrumentator(
+    should_group_status_codes=False,
+    should_ignore_untemplated=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=[
+        ".*admin.*",
+        "/metrics",
+    ],
+)
+
+instrumentator.instrument(app).expose(app)
 
 
 @app.get("/")
