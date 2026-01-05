@@ -4,6 +4,8 @@ import os
 import sentry_sdk
 from contextlib import asynccontextmanager
 from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from fastapi import HTTPException, status, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,6 +20,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 from app.core.redis import get_redis_client
+from app.core.limiter import limiter
 from app.core.logging import setup_logging
 from app.core.middleware import SecurityHeadersMiddleware
 from app.core.websockets import manager
@@ -103,6 +106,9 @@ def create_application() -> FastAPI:
     )
 
     application.include_router(api_router, prefix=settings.API_V1_STR)
+
+    application.state.limiter = limiter
+    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     application.add_middleware(
         TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*"]

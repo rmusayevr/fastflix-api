@@ -1,17 +1,18 @@
 import json
 from slugify import slugify
 from typing import Literal, List
-from fastapi import APIRouter, Depends, status, Query, HTTPException
-from fastapi_limiter.depends import RateLimiter
+from fastapi import APIRouter, Depends, status, Query, HTTPException, Request
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.api.dependencies import get_db, get_current_user, get_current_admin
+from app.core.limiter import limiter
 from app.core.redis import get_redis_client
 from app.models.user import UserModel
 from app.models.movie import Movie, Genre
+from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.services.movie_service import (
     get_all_movies_service,
     rate_movie_service,
@@ -28,9 +29,10 @@ router = APIRouter()
 @router.get(
     "/",
     response_model=PageResponse[MovieResponse],
-    dependencies=[Depends(RateLimiter(times=50, seconds=60))],
 )
+@limiter.limit("10/minute")
 async def read_movies(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(10, ge=1, le=100, description="Items per page"),
@@ -99,10 +101,12 @@ async def create_movie(
 
 
 @router.get("/trending", response_model=list[MovieResponse])
-async def get_trending_movies(db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")
+async def get_trending_movies(request: Request, db: AsyncSession = Depends(get_db)):
     """
     Fetches the Top 5 Trending movies from the Redis Cache.
     If cache is empty (e.g. first run), falls back to DB or returns empty.
+    Rate Limit: 5 per minute per IP.
     """
     redis = get_redis_client()
     cached_data = await redis.get("trending_movies")
