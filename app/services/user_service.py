@@ -15,15 +15,13 @@ async def register_user_service(user: UserCreate, db: AsyncSession) -> UserModel
     return await repo.create(user, hashed_pwd)
 
 
-async def authenticate_user_service(
-    email: str, password: str, db: AsyncSession
-) -> UserModel | None:
+async def authenticate_user(db: AsyncSession, email: str, password: str):
     repo = UserRepository(db)
+
     user = await repo.get_by_email(email)
 
     if not user:
         return None
-
     if not verify_password(password, user.hashed_password):
         return None
 

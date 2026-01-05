@@ -191,11 +191,6 @@ async def health_check():
     return health_status
 
 
-@app.get("/sentry-debug")
-async def trigger_error():
-    division_by_zero = 1 / 0
-
-
 @app.exception_handler(MovieNotFoundException)
 async def movie_not_found_handler(request: Request, exc: MovieNotFoundException):
     return JSONResponse(
