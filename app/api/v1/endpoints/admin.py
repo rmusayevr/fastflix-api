@@ -1,9 +1,15 @@
 import asyncio
+from celery import chain
 from typing import AsyncGenerator
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from app.api.dependencies import get_current_admin
-from app.tasks.export_tasks import export_movies_task
+from app.tasks.export_tasks import (
+    export_movies_task,
+    fetch_movies_data_task,
+    write_csv_file_task,
+    notify_export_completion_task,
+)
 
 router = APIRouter()
 
@@ -46,3 +52,19 @@ async def trigger_export(current_admin=Depends(get_current_admin)):
     export_movies_task.delay(current_admin.id)
 
     return {"message": "Export started! We will notify you when it is ready."}
+
+
+@router.post("/export-movies-workflow")
+async def trigger_export_workflow(current_admin=Depends(get_current_admin)):
+    """
+    Triggers a Celery Chain: Fetch -> Write -> Notify
+    """
+    workflow = chain(
+        fetch_movies_data_task.s(current_admin.id),
+        write_csv_file_task.s(),
+        notify_export_completion_task.s(),
+    )
+
+    workflow.apply_async()
+
+    return {"message": "Export Workflow Started! 🔗"}
