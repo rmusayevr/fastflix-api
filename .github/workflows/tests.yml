@@ -47,6 +47,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # We install both main and dev requirements
           pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Run Linter (Ruff)
@@ -61,13 +62,18 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fastflix_test
           POSTGRES_PORT: 5432
+
+          REDIS_URL: redis://localhost:6379/0
+
           SECRET_KEY: testing_secret_key_not_for_prod
           ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
+          REFRESH_TOKEN_EXPIRE_DAYS: 7
           PROJECT_NAME: FastFlix-CI
           ENVIRONMENT: test
-          ADMIN_EMAIL: admin@example.com
+
+          ADMIN_EMAIL: admin@gmail.com
           ADMIN_PASSWORD: admin123
-          REDIS_URL: redis://localhost:6379/0
+
         run: |
-          pytest
+          pytest -v

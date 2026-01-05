@@ -181,10 +181,11 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **Metrics**: You can see real-time traffic charts (`Prometheus` + `Grafana`).
 - [x] **Alerting:** You know when things break (`AlertManager`).
 
-🔄 **Phase 9: Security Hardening**
-- [ ] **OAuth2**: Social Login (Google/GitHub).
-- [ ] **RBAC**: Advanced Role-Based Access Control permissions.
-- [ ] **Security Headers**: Middleware hardening (CORS, HSTS).
+✅ **Phase 9: Security Hardening**
+- [x] **Security Headers**: Middleware hardening (Strict CORS, HSTS, X-Content-Type).
+- [x] **Rate Limiting**: DDoS protection with Redis & SlowAPI.
+- [x] **Data Hardening**: SQL Injection prevention & Pydantic strict mode.
+- [x] **Auth Refinement**: Dual-token system (JWT Access + Refresh Tokens).
 
 🔄 **Phase 10: Scale & Search**
 - [ ] **Search Engine**: ElasticSearch/MeiliSearch integration.

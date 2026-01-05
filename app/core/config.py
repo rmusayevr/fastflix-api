@@ -46,12 +46,12 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: str = "info@fastflix.com"
     EMAILS_FROM_NAME: str = "FastFlix"
 
-    FLOWER_ADMIN: str
-    FLOWER_PASSWORD: str
+    FLOWER_ADMIN: str | None = None
+    FLOWER_PASSWORD: str | None = None
 
     SENTRY_DSN: str | None = None
 
-    GF_SECURITY_ADMIN_PASSWORD: str
+    GF_SECURITY_ADMIN_PASSWORD: str | None = None
 
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
