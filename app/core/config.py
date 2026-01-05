@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import Literal, Optional
-from pydantic import field_validator, ValidationInfo
+from typing import Literal, Optional, List
+from pydantic import field_validator, ValidationInfo, AnyHttpUrl
 
 
 class Settings(BaseSettings):
@@ -49,8 +49,10 @@ class Settings(BaseSettings):
     FLOWER_PASSWORD: str
 
     SENTRY_DSN: str | None = None
-    
+
     GF_SECURITY_ADMIN_PASSWORD: str
+
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     DOMAIN: str = "http://localhost:3000"
 
@@ -89,6 +91,14 @@ class Settings(BaseSettings):
         db = info.data.get("REDIS_DB", 0)
 
         return f"redis://{host}:{port}/{db}"
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    def assemble_cors_origins(cls, v: str | List[str]) -> List[str] | str:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
 
     class Config:
         env_file = ".env"

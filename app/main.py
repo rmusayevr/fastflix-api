@@ -7,6 +7,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from fastapi import HTTPException, status, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_limiter import FastAPILimiter
@@ -18,6 +19,7 @@ from app.core.config import settings
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 from app.core.redis import get_redis_client
 from app.core.logging import setup_logging
+from app.core.middleware import SecurityHeadersMiddleware
 from app.core.websockets import manager
 from app.db.session import AsyncSessionLocal
 
@@ -103,12 +105,18 @@ def create_application() -> FastAPI:
     application.include_router(api_router, prefix=settings.API_V1_STR)
 
     application.add_middleware(
+        TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*"]
+    )
+
+    application.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    application.add_middleware(SecurityHeadersMiddleware)
 
     application.mount("/static", StaticFiles(directory="static"), name="static")
 
