@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List
 
 
@@ -26,8 +26,15 @@ class MovieBase(BaseModel):
     thumbnail_url: str
 
 
-class MovieCreate(MovieBase):
-    genre_ids: List[int] = []
+class MovieCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str | None = Field(None, max_length=1000)
+    release_year: int = Field(..., ge=1888, le=2100)
+    video_url: str | None = None
+    thumbnail_url: str | None = None
+    genre_ids: list[int] = []
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class MovieResponse(MovieBase):
@@ -43,10 +50,11 @@ class MovieResponse(MovieBase):
 
 
 class MovieUpdate(BaseModel):
-    title: str | None = None
-    description: str | None = None
-    release_year: int | None = None
+    title: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = Field(None, max_length=1000)
+    release_year: int | None = Field(None, ge=1888, le=2100)
     video_url: str | None = None
     thumbnail_url: str | None = None
-    is_published: bool | None = None
-    genre_ids: List[int] | None = None
+    genre_ids: list[int] | None = None
+
+    model_config = ConfigDict(extra="forbid")
