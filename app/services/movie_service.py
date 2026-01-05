@@ -1,17 +1,27 @@
 import json
+import math
 
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
-
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
-from app.core.redis import redis_client
+from app.core.redis import get_redis_client
 from app.repositories.movie_repository import MovieRepository
 from app.schemas.common import PageResponse
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.models.movie import Movie
 from app.schemas.rating import RatingCreate
 from app.repositories.rating_repository import RatingRepository
+
+
+async def invalidate_movie_cache():
+    """Helper to clear all movie-related cache keys."""
+    async with get_redis_client() as redis:
+        keys = [key async for key in redis.scan_iter("movies:*")]
+        if keys:
+            await redis.delete(*keys)
+            print(f"🧹 Invalidated {len(keys)} movie cache keys.")
 
 
 async def get_all_movies_service(
@@ -23,12 +33,13 @@ async def get_all_movies_service(
     order: str = "asc",
     min_rating: float = None,
 ) -> PageResponse[MovieResponse]:
-    cache_key = f"movies:{page}:{size}:{search_query or 'all'}:{sort_by}:{order}"
+    cache_key = f"movies:{page}:{size}:{search_query or 'all'}:{sort_by}:{order}:{min_rating or 'none'}"
 
-    cached_data = await redis_client.get(cache_key)
-    if cached_data:
-        print(f"⚡ Cache HIT for {cache_key}")
-        return PageResponse(**json.loads(cached_data))
+    async with get_redis_client() as redis:
+        cached_data = await redis.get(cache_key)
+        if cached_data:
+            print(f"⚡ Cache HIT for {cache_key}")
+            return PageResponse(**json.loads(cached_data))
 
     repo = MovieRepository(db)
     skip = (page - 1) * size
@@ -47,22 +58,20 @@ async def get_all_movies_service(
         )
 
     items_data = [MovieResponse.model_validate(item) for item in items]
-
-    import math
-
     total_pages = math.ceil(total / size) if size > 0 else 0
 
     response = PageResponse(
         items=items_data, total=total, page=page, size=size, pages=total_pages
     )
 
-    await redis_client.set(
-        cache_key,
-        json.dumps(jsonable_encoder(response)),
-        ex=60,
-    )
+    async with get_redis_client() as redis:
+        await redis.set(
+            cache_key,
+            json.dumps(jsonable_encoder(response)),
+            ex=60,
+        )
+        print(f"🐢 Cache MISS for {cache_key} - Loaded from DB")
 
-    print(f"🐢 Cache MISS for {cache_key} - Loaded from DB")
     return response
 
 
@@ -72,8 +81,7 @@ async def create_movie_service(
     repo = MovieRepository(db)
     new_movie = await repo.create_movie(movie, user_id)
 
-    print("🧹 Invalidating Cache: all_movies_list")
-    await redis_client.delete("all_movies_list")
+    await invalidate_movie_cache()
 
     return new_movie
 
@@ -100,8 +108,7 @@ async def update_movie_service(
 
     updated_movie = await repo.update_movie(movie, update_data)
 
-    print("🧹 Invalidating Cache: all_movies_list")
-    await redis_client.delete("all_movies_list")
+    await invalidate_movie_cache()
 
     return updated_movie
 
@@ -118,8 +125,7 @@ async def delete_movie_service(movie_id: int, user_id: int, db: AsyncSession) ->
 
     await repo.delete_movie(movie)
 
-    print("🧹 Invalidating Cache: all_movies_list")
-    await redis_client.delete("all_movies_list")
+    await invalidate_movie_cache()
 
 
 async def rate_movie_service(
