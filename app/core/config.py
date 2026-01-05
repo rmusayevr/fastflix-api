@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str | None = None
     EMAILS_FROM_EMAIL: str = "info@fastflix.com"
     EMAILS_FROM_NAME: str = "FastFlix"
+    
+    FLOWER_ADMIN: str
+    FLOWER_PASSWORD: str
 
     DOMAIN: str = "http://localhost:3000"
 
