@@ -1,4 +1,5 @@
 import uuid
+import structlog
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
@@ -22,6 +23,8 @@ from app.utils.storage import upload_file_to_s3
 
 router = APIRouter()
 
+logger = structlog.get_logger()
+
 
 @router.post("/register", response_model=UserResponse, status_code=201)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
@@ -38,15 +41,19 @@ async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
+    log = logger.bind(email=form_data.username)
+    log.info("user_login_attempt")
     user = await authenticate_user_service(form_data.username, form_data.password, db)
 
     if not user:
+        log.warning("user_login_failed", reason="invalid_credentials")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    log.info("user_login_success", user_id=user.id)
     access_token = create_access_token(subject=user.id)
     return {"access_token": access_token, "token_type": "bearer"}
 

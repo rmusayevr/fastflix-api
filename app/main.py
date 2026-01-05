@@ -15,6 +15,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 from app.core.redis import get_redis_client
+from app.core.logging import setup_logging
 from app.core.websockets import manager
 from app.db.session import AsyncSessionLocal
 
@@ -60,6 +61,8 @@ async def subscribe_to_notifications():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    setup_logging()
+
     redis_limiter = get_redis_client()
     await FastAPILimiter.init(redis_limiter)
 
