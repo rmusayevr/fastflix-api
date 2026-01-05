@@ -7,9 +7,9 @@ from app.core.celery_app import celery_app
 from app.db.session import AsyncSessionLocal
 from app.services.notification_service import NotificationService
 from app.models.movie import Movie
-from app.models.user import UserModel
-from app.models.rating import RatingModel
-from app.models.watchlist import WatchlistModel
+from app.models.user import UserModel  # noqa: F401
+from app.models.rating import RatingModel  # noqa: F401
+from app.models.watchlist import WatchlistModel  # noqa: F401
 from sqlalchemy import select
 
 EXPORT_DIR = "static/exports"

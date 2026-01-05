@@ -3,19 +3,20 @@ import json
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import HTTPException, status, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_limiter import FastAPILimiter
 
+from sqlalchemy import text
+
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
-from app.core.redis import (
-    get_redis_client,
-)
+from app.core.redis import get_redis_client
 from app.core.websockets import manager
+from app.db.session import AsyncSessionLocal
 
 os.makedirs("static/exports", exist_ok=True)
 
@@ -113,13 +114,40 @@ async def root():
     }
 
 
-@app.get("/health")
+@app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check():
-    return {
-        "status": "healthy",
-        "app_name": settings.PROJECT_NAME,
-        "env": settings.ENVIRONMENT,
-    }
+    """
+    Checks the health of the application and its dependencies.
+    """
+    health_status = {"status": "online", "database": "unknown", "redis": "unknown"}
+
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+            health_status["database"] = "online"
+    except Exception as e:
+        health_status["database"] = "offline"
+        health_status["status"] = "offline"
+        print(f"❌ Health Check DB Error: {e}")
+
+    try:
+        redis = get_redis_client()
+        if await redis.ping():
+            health_status["redis"] = "online"
+        else:
+            health_status["redis"] = "offline"
+        await redis.close()
+    except Exception as e:
+        health_status["redis"] = "offline"
+        health_status["status"] = "offline"
+        print(f"❌ Health Check Redis Error: {e}")
+
+    if health_status["status"] == "offline":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=health_status
+        )
+
+    return health_status
 
 
 @app.exception_handler(MovieNotFoundException)
