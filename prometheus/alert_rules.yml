@@ -1,0 +1,24 @@
+groups:
+  - name: fastflix-alerts
+    rules:
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le)) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Latency detected"
+          description: "95% of requests are taking longer than 0.5s."
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[1m]))
+          /
+          sum(rate(http_requests_total[1m]))
+          > 0.1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API is failing"
+          description: "More than 10% of requests are returning 500 errors."

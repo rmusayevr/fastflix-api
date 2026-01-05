@@ -175,10 +175,11 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **Celery Beat:** Scheduled cache warming (Trending Movies).
 - [x] **Redis Pub/Sub:** Event-driven messaging.
 
-🔄 **Phase 8: Observability & Monitoring**
-- [ ] **Structured Logging**: JSON logging for production parsing.
-- [ ] **APM**: Integration with Sentry/OpenTelemetry.
-- [ ] **Metrics**: Prometheus & Grafana dashboard integration.
+✅ **Phase 8: Observability & Monitoring**
+- [x] **Structured Logging**: You can search JSON logs (`structlog`).
+- [x] **Tracing:** You can see waterfall graphs of slow requests (`Sentry`).
+- [x] **Metrics**: You can see real-time traffic charts (`Prometheus` + `Grafana`).
+- [x] **Alerting:** You know when things break (`AlertManager`).
 
 🔄 **Phase 9: Security Hardening**
 - [ ] **OAuth2**: Social Login (Google/GitHub).
@@ -198,6 +199,7 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 ```
 fastflix-api/
 ├── .github/            # CI/CD Pipelines (GitHub Actions)
+├── alembic/            # Database Migrations (Version Control)
 ├── app/
 │   ├── api/            # Routes & Endpoints (v1)
 │   ├── core/           # Config, Security, Celery & Exceptions
@@ -209,15 +211,17 @@ fastflix-api/
 │   ├── tasks/          # Background Workers (Celery + Redis)
 │   ├── templates/      # Jinja2 Templates (Emails)
 │   ├── utils/          # Utility functions (Storage, Helpers)
-│   └── main.py         # Application Entrypoint
-├── alembic/            # Database Migrations (Version Control)
+│   └── main.py         # Application Entrypoint (Instrumented)
+├── prometheus/         # Monitoring Configuration
+│   ├── alert_rules.yml # Alert definitions (High Latency, Errors)
+│   └── prometheus.yml  # Prometheus scrape config
 ├── scripts/            # Management CLI & Data Importers
 ├── tests/              # Pytest Suite (Unit, Integration, Load)
 ├── Dockerfile          # Multi-stage production build
-├── docker-compose.yml  # Full stack orchestration (App, DB, Redis, MinIO)
+├── docker-compose.yml  # Orchestration (App, DB, Redis, MinIO, Prom, Grafana)
 ├── gunicorn_conf.py    # Production Process Manager config
 ├── prestart.sh         # Migration & startup automation script
-└── requirements.txt    # Python Dependencies
+└── requirements.txt    # Python Dependencies (Added instrumentator)
 ```
 
 **Live Demo:** https://fastflix-api-production.up.railway.app/docs
