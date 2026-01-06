@@ -46,9 +46,7 @@ async def get_current_user(
 
     stmt = (
         select(UserModel)
-        .options(
-            selectinload(UserModel.role).selectinload(RoleModel.permissions)
-        )
+        .options(selectinload(UserModel.role).selectinload(RoleModel.permissions))
         .where(UserModel.id == token_data.sub)
     )
     result = await db.execute(stmt)

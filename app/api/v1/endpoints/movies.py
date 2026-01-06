@@ -99,7 +99,7 @@ async def read_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
     "/",
     response_model=MovieResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(PermissionChecker("movie:create"))],  # <--- RBAC Enforced
+    dependencies=[Depends(PermissionChecker("movie:create"))],
 )
 async def create_movie(
     movie_in: MovieCreate,

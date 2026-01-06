@@ -183,17 +183,24 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 
 ✅ **Phase 9: Security Hardening**
 - [x] **Security Headers**: Middleware hardening (Strict CORS, HSTS, X-Content-Type).
-- [x] **Rate Limiting**: DDoS protection with Redis & SlowAPI.
-- [x] **Data Hardening**: SQL Injection prevention & Pydantic strict mode.
+- [x] **Rate Limiting**: DDoS protection with `Redis` & `SlowAPI`.
+- [x] **Data Hardening**: SQL Injection prevention & `Pydantic` strict mode.
 - [x] **Auth Refinement**: Dual-token system (JWT Access + Refresh Tokens).
 
-🔄 **Phase 10: Scale & Search**
-- [ ] **Search Engine**: ElasticSearch/MeiliSearch integration.
-- [ ] **DB Tuning**: Query analysis and index optimization.
+✅ **Phase 10: Advanced Authentication**
+- [x] **Social Login**: Google OAuth2 integration (`Authlib`).
+- [x] **RBAC Data Layer**: Roles & Permissions database models.
+- [x] **RBAC Enforcement**: Declarative dependencies (`movie:delete`).
+- [x] **Permission Seeding**: Automated script for default roles.
 
-🏁 **Phase 11: Final Polish**
+🔄 **Phase 11: Scale & Search** (Starting Next)
+- [ ] **Search Engine**: ElasticSearch or MeiliSearch integration.
+- [ ] **DB Tuning**: Query analysis (`EXPLAIN ANALYZE`) and Index optimization.
+- [ ] **Caching Strategy**: Advanced Cache-Aside patterns.
+
+🏁 **Phase 12: Final Polish**
 - [ ] **Documentation**: OpenAPI examples & Architecture diagrams.
-- [ ] **Load Testing**: High-concurrency stress testing.
+- [ ] **Load Testing**: High-concurrency stress testing (`Locust`).
 - [ ] **Final Release**: Production deployment v1.0.
 
 ## 📂 Project Structure
@@ -203,15 +210,16 @@ fastflix-api/
 ├── alembic/            # Database Migrations (Version Control)
 ├── app/
 │   ├── api/            # Routes & Endpoints (v1)
-│   ├── core/           # Config, Security, Celery & Exceptions
+│   ├── core/           # Config, Security, OAuth, Celery & Exceptions
 │   ├── db/             # Database session & Base models
-│   ├── models/         # SQLAlchemy Tables (Movies, Users, Ratings)
+│   ├── models/         # SQLAlchemy Tables (Movies, Users, Ratings, RBAC)
 │   ├── repositories/   # DB Access Layer (Repository Pattern)
 │   ├── schemas/        # Pydantic Models (Request/Response)
 │   ├── services/       # Business Logic Layer
 │   ├── tasks/          # Background Workers (Celery + Redis)
 │   ├── templates/      # Jinja2 Templates (Emails)
 │   ├── utils/          # Utility functions (Storage, Helpers)
+│   ├── seed_rbac.py    # RBAC Database Seeder Script
 │   └── main.py         # Application Entrypoint (Instrumented)
 ├── prometheus/         # Monitoring Configuration
 │   ├── alert_rules.yml # Alert definitions (High Latency, Errors)
@@ -222,7 +230,7 @@ fastflix-api/
 ├── docker-compose.yml  # Orchestration (App, DB, Redis, MinIO, Prom, Grafana)
 ├── gunicorn_conf.py    # Production Process Manager config
 ├── prestart.sh         # Migration & startup automation script
-└── requirements.txt    # Python Dependencies (Added instrumentator)
+└── requirements.txt    # Dependencies (FastAPI, SQLA, Celery, Authlib)
 ```
 
 **Live Demo:** https://fastflix-api-production.up.railway.app/docs
