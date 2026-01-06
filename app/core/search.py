@@ -22,10 +22,7 @@ class SearchClient:
         """Returns True if MeiliSearch is responsive"""
         client = cls.get_client()
         if client:
-            try:
-                return client.health().get("status") == "available"
-            except:
-                return False
+            return client.health().get("status") == "available"
         return False
 
 
