@@ -52,3 +52,30 @@ async def add_movies_to_search(movies: list[Movie]):
         print(
             f"🚀 Sent {len(documents)} movies to search engine (Task UID: {task.task_uid})"
         )
+
+
+async def search_movies_in_meili(query: str, limit: int = 10, offset: int = 0):
+    """
+    Searches MeiliSearch and returns a dictionary with IDs and Total count.
+    """
+    client = get_search_client()
+    if not client:
+        return {"ids": [], "total": 0}
+
+    try:
+        results = client.index(INDEX_NAME).search(
+            query,
+            {
+                "limit": limit,
+                "offset": offset,
+                "attributesToRetrieve": ["id"],
+            },
+        )
+
+        hits = results.get("hits", [])
+        total = results.get("estimatedTotalHits", 0)
+
+        return {"ids": [hit["id"] for hit in hits], "total": total}
+    except Exception as e:
+        print(f"⚠️ Search failed: {e}")
+        return {"ids": [], "total": 0}

@@ -3,16 +3,19 @@ import math
 
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import MovieNotFoundException, NotAuthorizedException
 from app.core.redis import get_redis_client
 from app.repositories.movie_repository import MovieRepository
+from app.repositories.rating_repository import RatingRepository
+from app.models.movie import Movie
 from app.schemas.common import PageResponse
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
-from app.models.movie import Movie
 from app.schemas.rating import RatingCreate
-from app.repositories.rating_repository import RatingRepository
+from app.services.search_service import search_movies_in_meili
 
 
 async def invalidate_movie_cache():
@@ -41,23 +44,46 @@ async def get_all_movies_service(
             print(f"⚡ Cache HIT for {cache_key}")
             return PageResponse(**json.loads(cached_data))
 
-    repo = MovieRepository(db)
-    skip = (page - 1) * size
+    items_data = []
+    total = 0
 
     if search_query:
-        items = await repo.search_movies(search_query)
-        total = len(items)
+        offset = (page - 1) * size
+
+        search_result = await search_movies_in_meili(
+            search_query, limit=size, offset=offset
+        )
+        movie_ids = search_result["ids"]
+        total = search_result["total"]
+
+        if movie_ids:
+            stmt = (
+                select(Movie)
+                .options(selectinload(Movie.genres))
+                .where(Movie.id.in_(movie_ids))
+            )
+            result = await db.execute(stmt)
+            movies = result.scalars().all()
+
+            movies_map = {m.id: m for m in movies}
+            ordered_movies = [movies_map[mid] for mid in movie_ids if mid in movies_map]
+
+            items_data = [MovieResponse.model_validate(item) for item in ordered_movies]
+
     else:
+        repo = MovieRepository(db)
+        skip = (page - 1) * size
+
         items, total = await repo.get_all_movies(
             skip=skip,
             limit=size,
             sort_by=sort_by,
             order=order,
             min_rating=min_rating,
-            search_query=search_query,
+            search_query=None,
         )
+        items_data = [MovieResponse.model_validate(item) for item in items]
 
-    items_data = [MovieResponse.model_validate(item) for item in items]
     total_pages = math.ceil(total / size) if size > 0 else 0
 
     response = PageResponse(
@@ -70,7 +96,7 @@ async def get_all_movies_service(
             json.dumps(jsonable_encoder(response)),
             ex=60,
         )
-        print(f"🐢 Cache MISS for {cache_key} - Loaded from DB")
+        print(f"🐢 Cache MISS for {cache_key} - Loaded from Source")
 
     return response
 
