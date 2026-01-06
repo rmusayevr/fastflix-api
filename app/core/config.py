@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     DOMAIN: str = "http://localhost:3000"
-    
+
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
 

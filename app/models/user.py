@@ -1,5 +1,11 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Boolean, DateTime
+from sqlalchemy import (
+    String,
+    Integer,
+    Boolean,
+    DateTime,
+    ForeignKey,
+)
 from app.db.base import Base
 from app.models.mixins import TimestampMixin
 from typing import TYPE_CHECKING, List
@@ -8,6 +14,7 @@ import datetime
 if TYPE_CHECKING:
     from app.models.rating import RatingModel
     from app.models.watchlist import WatchlistModel
+    from app.models.rbac import RoleModel
 
 
 class UserModel(Base, TimestampMixin):
@@ -21,6 +28,11 @@ class UserModel(Base, TimestampMixin):
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    role_id: Mapped[int | None] = mapped_column(ForeignKey("roles.id"), nullable=True)
+    role: Mapped["RoleModel"] = relationship(
+        "RoleModel", back_populates="users", lazy="joined"
+    )
 
     deleted_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

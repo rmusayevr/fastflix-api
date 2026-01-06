@@ -43,7 +43,7 @@ async def get_or_create_google_user(email: str, db: AsyncSession):
     random_password = str(uuid.uuid4())
     hashed_pw = get_password_hash(random_password)
 
-    new_user_data = UserCreate(
+    UserCreate(
         email=email,
         password=random_password,
         full_name="Google User",
