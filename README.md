@@ -193,10 +193,12 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **RBAC Enforcement**: Declarative dependencies (`movie:delete`).
 - [x] **Permission Seeding**: Automated script for default roles.
 
-🔄 **Phase 11: Scale & Search** (Starting Next)
-- [ ] **Search Engine**: ElasticSearch or MeiliSearch integration.
-- [ ] **DB Tuning**: Query analysis (`EXPLAIN ANALYZE`) and Index optimization.
-- [ ] **Caching Strategy**: Advanced Cache-Aside patterns.
+✅ **Phase 11: Scale & Search**
+- [x] **Search Engine**: MeiliSearch integration (Typo-tolerance & Ranking).
+- [x] **Hybrid Search**: Logic to switch between SQL & Search Engine.
+- [x] **Real-Time Sync**: Background tasks for instant index updates.
+- [x] **DB Tuning**: Query analysis (`EXPLAIN ANALYZE`) and Index optimization.
+- [x] **Caching Strategy**: Redis Cache-Aside pattern for high-traffic reads.
 
 🏁 **Phase 12: Final Polish**
 - [ ] **Documentation**: OpenAPI examples & Architecture diagrams.

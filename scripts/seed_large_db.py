@@ -48,7 +48,7 @@ async def seed_large_db():
 
             await db.execute(insert(Movie), batch)
             await db.commit()
-            print(f"   - Inserted batch {i} to {i+batch_size}")
+            print(f"   - Inserted batch {i} to {i + batch_size}")
 
     duration = time.time() - start_time
     print(f"✅ Finished in {duration:.2f} seconds!")
