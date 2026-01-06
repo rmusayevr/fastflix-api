@@ -59,6 +59,9 @@ class Settings(BaseSettings):
 
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
+    
+    MEILI_HOST: str | None = None
+    MEILI_MASTER_KEY: str | None = None
 
     @property
     def CELERY_BROKER_URL(self) -> str:

@@ -25,6 +25,8 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/redis_data
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping"]
       interval: 5s
@@ -201,9 +203,25 @@ services:
     networks:
       - fastflix-network
 
+  search:
+    image: getmeili/meilisearch:latest
+    container_name: fastflix_search
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-masterKeyFastFlix}
+      - MEILI_NO_ANALYTICS=true
+    volumes:
+      - meili_data:/meili_data
+    networks:
+      - fastflix-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  redis_data:
   minio_data:
+  meili_data:
 
 networks:
   fastflix-network:
