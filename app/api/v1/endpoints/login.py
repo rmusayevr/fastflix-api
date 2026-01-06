@@ -1,11 +1,12 @@
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt, JWTError
 
 from app.api.dependencies import get_db
 from app.core import security
+from app.core.oauth import oauth
 from app.core.config import settings
 from app.services.user_service import authenticate_user
 from app.schemas.token import Token
@@ -71,3 +72,12 @@ async def refresh_token(
         "refresh_token": refresh_token,
         "token_type": "bearer",
     }
+
+
+@router.get("/google")
+async def google_login(request: Request):
+    """
+    Redirects the user to the Google Login page.
+    """
+    redirect_uri = request.url_for("google_auth")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
