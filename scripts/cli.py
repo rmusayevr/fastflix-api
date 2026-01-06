@@ -74,11 +74,11 @@ class GenreMapper:
             if resp.status_code == 201:
                 data = resp.json()
                 self.local_genres[data["name"]] = data["id"]
-                click.secho(f"   ➕ Created genre: {name}", dim=True)
+                click.secho(f"➕ Created genre: {name}", dim=True)
             elif resp.status_code == 400:
                 pass
             else:
-                click.secho(f"   ❌ Failed to create genre {name}", fg="red")
+                click.secho(f"❌ Failed to create genre {name}", fg="red")
         except httpx.RequestError:
             pass
 
@@ -104,7 +104,7 @@ async def get_token(client: httpx.AsyncClient) -> str:
     """Authenticate as Admin and retrieve JWT."""
     try:
         response = await client.post(
-            f"{API_URL}/auth/token",
+            f"{API_URL}/auth/access-token",
             data={"username": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
         )
         response.raise_for_status()

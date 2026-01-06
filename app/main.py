@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.sessions import SessionMiddleware
 
 from fastapi import HTTPException, status, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -121,7 +122,11 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+    application.add_middleware(
+        SessionMiddleware,
+        secret_key=settings.SECRET_KEY,
+        max_age=3600,
+    )
     application.add_middleware(SecurityHeadersMiddleware)
 
     application.mount("/static", StaticFiles(directory="static"), name="static")

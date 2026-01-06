@@ -8,7 +8,8 @@ from app.api.dependencies import get_db
 from app.core import security
 from app.core.oauth import oauth
 from app.core.config import settings
-from app.services.user_service import authenticate_user
+from app.core.security import create_access_token, create_refresh_token
+from app.services.user_service import authenticate_user, get_or_create_google_user
 from app.schemas.token import Token
 
 router = APIRouter()
@@ -81,3 +82,32 @@ async def google_login(request: Request):
     """
     redirect_uri = request.url_for("google_auth")
     return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/google/callback", name="google_auth")
+async def google_auth(request: Request, db: AsyncSession = Depends(get_db)):
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Google Auth Failed: {str(e)}")
+
+    user_info = token.get("userinfo")
+
+    if not user_info:
+        user_info = await oauth.google.userinfo(token=token)
+
+    email = user_info.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account has no email")
+
+    user = await get_or_create_google_user(email, db)
+
+    access_token = create_access_token(user.id)
+    refresh_token = create_refresh_token(user.id)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": user.email,
+    }
