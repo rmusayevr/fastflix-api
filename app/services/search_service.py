@@ -79,3 +79,45 @@ async def search_movies_in_meili(query: str, limit: int = 10, offset: int = 0):
     except Exception as e:
         print(f"⚠️ Search failed: {e}")
         return {"ids": [], "total": 0}
+
+
+def index_movie(movie: Movie):
+    """
+    Adds or Updates a SINGLE movie in MeiliSearch.
+    This is synchronous, intended to be run in a BackgroundTask.
+    """
+    client = get_search_client()
+    if not client:
+        return
+
+    try:
+        doc = MovieSearchDoc(
+            id=movie.id,
+            title=movie.title,
+            description=movie.description,
+            release_year=movie.release_year,
+            rating=movie.average_rating or 0.0,
+            thumbnail_url=movie.thumbnail_url,
+            slug=movie.slug,
+            genres=[g.name for g in movie.genres],
+        )
+
+        client.index(INDEX_NAME).add_documents([doc.model_dump()])
+        print(f"🔄 Search Index Updated: {movie.title}")
+    except Exception as e:
+        print(f"⚠️ Failed to index movie {movie.id}: {e}")
+
+
+def remove_movie_from_index(movie_id: int):
+    """
+    Removes a movie from the search index.
+    """
+    client = get_search_client()
+    if not client:
+        return
+
+    try:
+        client.index(INDEX_NAME).delete_document(str(movie_id))
+        print(f"🗑️ Search Index Deleted: ID {movie_id}")
+    except Exception as e:
+        print(f"⚠️ Failed to remove movie {movie_id} from index: {e}")

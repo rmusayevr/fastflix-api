@@ -1,7 +1,15 @@
 import json
 from slugify import slugify
 from typing import Literal, List
-from fastapi import APIRouter, Depends, status, Query, HTTPException, Request
+from fastapi import (
+    APIRouter,
+    Depends,
+    status,
+    Query,
+    HTTPException,
+    Request,
+    BackgroundTasks,
+)
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +33,7 @@ from app.services.movie_service import (
 from app.schemas.common import PageResponse
 from app.schemas.rating import RatingResponse, RatingCreate
 from app.services.watchlist_service import toggle_watchlist_service
+from app.services.search_service import index_movie, remove_movie_from_index
 from app.tasks.notification_tasks import broadcast_notification_task
 
 router = APIRouter()
@@ -103,6 +112,7 @@ async def read_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
 )
 async def create_movie(
     movie_in: MovieCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user),
 ):
@@ -137,7 +147,7 @@ async def create_movie(
     )
     result = await db.execute(stmt)
     fresh_movie = result.scalars().first()
-
+    background_tasks.add_task(index_movie, fresh_movie)
     broadcast_notification_task.delay(f"🎬 New Release: {fresh_movie.title}")
     return fresh_movie
 
@@ -150,6 +160,7 @@ async def create_movie(
 async def update_movie(
     movie_id: int,
     movie_in: MovieUpdate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user),
 ):
@@ -174,6 +185,7 @@ async def update_movie(
 
     await db.commit()
     await db.refresh(movie)
+    background_tasks.add_task(index_movie, movie)
     return movie
 
 
@@ -184,6 +196,7 @@ async def update_movie(
 )
 async def delete_movie(
     movie_id: int,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user),
 ):
@@ -196,6 +209,7 @@ async def delete_movie(
 
     await db.delete(movie)
     await db.commit()
+    background_tasks.add_task(remove_movie_from_index, movie_id)
     return None
 
 
