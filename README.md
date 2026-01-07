@@ -200,10 +200,24 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **DB Tuning**: Query analysis (`EXPLAIN ANALYZE`) and Index optimization.
 - [x] **Caching Strategy**: Redis Cache-Aside pattern for high-traffic reads.
 
-🏁 **Phase 12: Final Polish**
-- [ ] **Documentation**: OpenAPI examples & Architecture diagrams.
+🤖 **Phase 12: AI & Semantic Search** (Days 88–92)
+- [ ] **Vector Database**: Enable `pgvector` & update Movie models.
+- [ ] **Embedding Pipeline**: Generate vector embeddings for Movie descriptions (HuggingFace).
+- [ ] **Semantic Search**: Implement "Search by Meaning" endpoint (Cosine Similarity).
+- [ ] **Recommendations**: "More Like This" engine based on vector distance.
+- [ ] **RAG**: "Chat with your Data" endpoint using a local LLM.
+
+📊 **Phase 13: The Admin Dashboard** (Days 93–96)
+- [ ] **UI Framework**: Set up `Streamlit` for a Python-only frontend.
+- [ ] **Analytics**: Visualize User Growth and Genre Popularity charts.
+- [ ] **Movie Manager**: GUI to Add/Edit/Delete movies without using Postman.
+- [ ] **AI Playground**: Visual tool to test Semantic Search results.
+
+🏁 **Phase 14: Final Polish** (Days 97–100)
+- [ ] **Documentation**: OpenAPI metadata, example responses & error codes.
 - [ ] **Load Testing**: High-concurrency stress testing (`Locust`).
-- [ ] **Final Release**: Production deployment v1.0.
+- [ ] **Code Quality**: Linting (`ruff`), Pre-commit hooks & Refactoring.
+- [ ] **Final Release**: Production deployment v1.0 & Retrospective.
 
 ## 📂 Project Structure
 ```

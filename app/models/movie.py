@@ -2,6 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.types import TypeDecorator
+from pgvector.sqlalchemy import Vector
 from app.db.base import Base
 from app.models.mixins import TimestampMixin
 
@@ -49,6 +50,8 @@ class Movie(Base, TimestampMixin):
             "to_tsvector('english', title || ' ' || description)", persisted=True
         ),
     )
+
+    embedding: Mapped[list[float]] = mapped_column(Vector(384), nullable=True)
 
     genres = relationship("Genre", secondary=movie_genres_link, back_populates="movies")
     ratings = relationship(
