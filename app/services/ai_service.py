@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from anthropic import Anthropic
 from sentence_transformers import SentenceTransformer
 
@@ -57,6 +58,24 @@ class AIService:
 
         except Exception as e:
             return f"⚠️ AI Error: {str(e)}"
+
+    @classmethod
+    def calculate_similarity(cls, text1: str, text2: str) -> float:
+        """
+        Computes the Cosine Similarity between two texts.
+        Returns a float between 0.0 (different) and 1.0 (identical).
+        """
+        vec1 = np.array(cls.generate_embedding(text1))
+        vec2 = np.array(cls.generate_embedding(text2))
+
+        dot_product = np.dot(vec1, vec2)
+        norm_a = np.linalg.norm(vec1)
+        norm_b = np.linalg.norm(vec2)
+
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+
+        return float(dot_product / (norm_a * norm_b))
 
 
 def get_embedding(text: str):

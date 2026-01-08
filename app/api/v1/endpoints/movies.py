@@ -23,7 +23,7 @@ from app.api.dependencies import (
 from app.core.limiter import limiter
 from app.core.redis import get_redis_client
 from app.models.user import UserModel
-from app.models.movie import Movie, Genre
+from app.models.movie import Movie, Genre, CompareRequest
 from app.repositories.movie_repository import MovieRepository
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.services.movie_service import (
@@ -138,6 +138,15 @@ async def get_genre_stats(db: AsyncSession = Depends(get_db)):
     stats = await repo.get_genre_statistics()
     # Convert list of tuples to list of dicts for JSON
     return [{"genre": row[0], "count": row[1]} for row in stats]
+
+
+@router.post("/utils/compare_vectors")
+async def compare_vectors(payload: CompareRequest):
+    """
+    🧮 Debug tool to compare two texts semantically.
+    """
+    score = AIService.calculate_similarity(payload.text1, payload.text2)
+    return {"similarity_score": score}
 
 
 @router.get("/{movie_id}", response_model=MovieResponse)

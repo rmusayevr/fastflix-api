@@ -64,7 +64,8 @@ logout()
 headers = {"Authorization": f"Bearer {st.session_state['access_token']}"}
 
 page = st.sidebar.radio(
-    "Go to", ["Overview", "Manage Movies", "Semantic Search", "AI Chat"]
+    "Go to",
+    ["Overview", "Manage Movies", "Semantic Search", "AI Chat", "AI Playground"],
 )
 
 genre_map = {}
@@ -218,3 +219,55 @@ elif page == "AI Chat":
         res = requests.post(f"{API_URL}/movies/chat", params={"question": q})
         if res.status_code == 200:
             st.write(res.json().get("answer"))
+
+elif page == "AI Playground":
+    st.header("🧠 AI Vector Playground")
+    st.caption(
+        "Understand how the AI 'thinks' by comparing the mathematical distance between two concepts."
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Text A")
+        text_a = st.text_area(
+            "Enter first concept", "A lonely robot on a deserted planet", height=150
+        )
+
+    with col2:
+        st.subheader("Text B")
+        text_b = st.text_area(
+            "Enter second concept", "Wall-E cleaning up garbage in space", height=150
+        )
+
+    if st.button("⚔️ Compare Concepts"):
+        if text_a and text_b:
+            try:
+                payload = {"text1": text_a, "text2": text_b}
+                res = requests.post(
+                    f"{API_URL}/movies/utils/compare_vectors",
+                    json=payload,
+                    headers=headers,
+                )
+
+                if res.status_code == 200:
+                    data = res.json()
+                    score = data["similarity_score"]
+
+                    st.divider()
+                    st.subheader("Similarity Score")
+
+                    st.progress(score)
+                    st.metric(label="Cosine Similarity", value=f"{score:.4f}")
+
+                    if score > 0.8:
+                        st.success("✅ These concepts are VERY similar!")
+                    elif score > 0.5:
+                        st.info("ℹ️ These concepts are somewhat related.")
+                    else:
+                        st.warning("❌ These concepts are totally different.")
+
+                else:
+                    st.error(f"API Error: {res.text}")
+            except Exception as e:
+                st.error(f"Connection Error: {e}")

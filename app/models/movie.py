@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.types import TypeDecorator
 from pgvector.sqlalchemy import Vector
+from pydantic import BaseModel
 from app.db.base import Base
 from app.models.mixins import TimestampMixin
 
@@ -64,3 +65,8 @@ class Movie(Base, TimestampMixin):
     __table_args__ = (
         sa.Index("ix_movies_search_vector", "search_vector", postgresql_using="gin"),
     )
+
+
+class CompareRequest(BaseModel):
+    text1: str
+    text2: str
