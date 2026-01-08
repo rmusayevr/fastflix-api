@@ -27,6 +27,8 @@ COPY --chown=appuser:appuser --from=builder /root/.local /home/appuser/.local
 
 ENV PATH=/home/appuser/.local/bin:$PATH
 
+COPY ./dashboard ./dashboard
+
 COPY ./app ./app
 COPY ./alembic ./alembic
 COPY ./alembic.ini .

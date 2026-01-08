@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+
+  web:
+    image: rmusayevr/fastflix:latest
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_SERVER=${POSTGRES_SERVER}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - PROJECT_NAME=${PROJECT_NAME}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_DB=${REDIS_DB}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    depends_on:
+      - db
+      - redis
+    command: sh -c "./prestart.sh gunicorn -c gunicorn_conf.py app.main:app"
+
+  celery_worker:
+    image: rmusayevr/fastflix:latest
+    command: sh -c "./prestart.sh celery -A app.core.celery_app worker --loglevel=info"
+    environment:
+      - POSTGRES_SERVER=db
+      - REDIS_HOST=redis
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    depends_on:
+      - redis
+      - db
+
+  dashboard:
+    image: rmusayevr/fastflix:latest
+    command: streamlit run dashboard/main.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://web:8000/api/v1
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
