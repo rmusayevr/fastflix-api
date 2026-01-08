@@ -218,6 +218,20 @@ services:
       - fastflix-network
     restart: unless-stopped
 
+  dashboard:
+    build: .
+    command: streamlit run dashboard/main.py --server.port=8501 --server.address=0.0.0.0
+    volumes:
+      - .:/app
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://web:8000/api/v1
+    depends_on:
+      - web
+    networks:
+      - fastflix-network
+
 volumes:
   postgres_data:
   redis_data:
