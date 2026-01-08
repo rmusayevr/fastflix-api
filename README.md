@@ -200,20 +200,20 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **DB Tuning**: Query analysis (`EXPLAIN ANALYZE`) and Index optimization.
 - [x] **Caching Strategy**: Redis Cache-Aside pattern for high-traffic reads.
 
-✅ **Phase 12: AI & Semantic Search** (Days 88–92)
+✅ **Phase 12: AI & Semantic Search**
 - [x] **Vector Database**: Enable `pgvector` & update Movie models.
 - [x] **Embedding Pipeline**: Generate vector embeddings for Movie descriptions (HuggingFace).
 - [x] **Semantic Search**: Implement "Search by Meaning" endpoint (Cosine Similarity).
 - [x] **Recommendations**: "More Like This" engine based on vector distance.
 - [x] **RAG**: "Chat with your Data" endpoint using a local LLM.
 
-📊 **Phase 13: The Admin Dashboard** (Days 93–96)
-- [ ] **UI Framework**: Set up `Streamlit` for a Python-only frontend.
-- [ ] **Analytics**: Visualize User Growth and Genre Popularity charts.
-- [ ] **Movie Manager**: GUI to Add/Edit/Delete movies without using Postman.
-- [ ] **AI Playground**: Visual tool to test Semantic Search results.
+✅ **Phase 13: The Admin Dashboard**
+- [x] **UI Framework**: Set up `Streamlit` for a Python-only frontend.
+- [x] **Analytics**: Visualize User Growth and Genre Popularity charts.
+- [x] **Movie Manager**: GUI to Add/Edit/Delete movies without using Postman.
+- [x] **AI Playground**: Visual tool to test Semantic Search results.
 
-🏁 **Phase 14: Final Polish** (Days 97–100)
+🏁 **Phase 14: Final Polish**
 - [ ] **Documentation**: OpenAPI metadata, example responses & error codes.
 - [ ] **Load Testing**: High-concurrency stress testing (`Locust`).
 - [ ] **Code Quality**: Linting (`ruff`), Pre-commit hooks & Refactoring.
