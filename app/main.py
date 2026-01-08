@@ -111,13 +111,15 @@ def create_application() -> FastAPI:
     application.state.limiter = limiter
     application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-    application.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*"]
-    )
+    allowed_hosts = os.getenv("ALLOWED_HOSTS", "*").split(",")
+
+    application.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+
+    cors_origins = os.getenv("BACKEND_CORS_ORIGINS", "*").split(",")
 
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

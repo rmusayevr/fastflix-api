@@ -8,33 +8,37 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["dev", "test", "prod"] = "dev"
     API_V1_STR: str = "/api/v1"
 
+    # --- DATABASE ---
     POSTGRES_SERVER: str
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     POSTGRES_PORT: int = 5432
 
+    # --- SECURITY ---
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
+    BACKEND_CORS_ORIGINS: List[str] = []
 
+    # --- INFRASTRUCTURE ---
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
+    REDIS_URL: str | None = None
 
-    REDIS_URL: Optional[str] = None
-
+    # --- EXTERNAL SERVICES ---
     TMDB_API_KEY: str | None = None
     ADMIN_EMAIL: str
     ADMIN_PASSWORD: str
 
     MINIO_ROOT_USER: str | None = None
     MINIO_ROOT_PASSWORD: str | None = None
-
     S3_BUCKET_NAME: str = "fastflix-media"
     S3_ENDPOINT_URL: str | None = None
-
     AWS_ACCESS_KEY_ID: str | None = None
     AWS_SECRET_ACCESS_KEY: str | None = None
     AWS_REGION: str = "us-east-1"
@@ -48,21 +52,15 @@ class Settings(BaseSettings):
 
     FLOWER_ADMIN: str | None = None
     FLOWER_PASSWORD: str | None = None
-
     SENTRY_DSN: str | None = None
-
     GF_SECURITY_ADMIN_PASSWORD: str | None = None
-
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
-
+    
     DOMAIN: str = "http://localhost:3000"
-
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
 
     MEILI_HOST: str | None = None
     MEILI_MASTER_KEY: str | None = None
-
     ANTHROPIC_API_KEY: str | None = None
 
     @property
@@ -102,12 +100,20 @@ class Settings(BaseSettings):
         return f"redis://{host}:{port}/{db}"
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
     def assemble_cors_origins(cls, v: str | List[str]) -> List[str] | str:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
+
+    @field_validator("ALLOWED_HOSTS", mode="before")
+    @classmethod
+    def assemble_allowed_hosts(cls, v: str | List[str]) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        return v
 
     class Config:
         env_file = ".env"
