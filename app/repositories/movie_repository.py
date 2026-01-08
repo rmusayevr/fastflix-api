@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, asc, case, nullslast, or_
+from sqlalchemy import select, func, desc, asc, case, nullslast, or_, text
 from sqlalchemy.orm import aliased, selectinload
 from app.models.movie import Movie
 from app.models.rating import RatingModel
@@ -208,3 +208,19 @@ class MovieRepository:
 
         result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def get_genre_statistics(self):
+        """
+        Returns a list of tuples: (Genre Name, Movie Count)
+        e.g., [('Sci-Fi', 150), ('Drama', 80)]
+        """
+        sql = """
+            SELECT g.name, COUNT(mg.movie_id) as count 
+            FROM genres g
+            JOIN movie_genres mg ON g.id = mg.genre_id
+            GROUP BY g.name
+            ORDER BY count DESC
+            LIMIT 10;
+        """
+        result = await self.session.execute(text(sql))
+        return result.fetchall()

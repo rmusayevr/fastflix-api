@@ -129,6 +129,17 @@ async def chat_with_movies(question: str, db: AsyncSession = Depends(get_db)):
     return {"question": question, "source_movie": top_movie.title, "answer": answer}
 
 
+@router.get("/analytics/genres")
+async def get_genre_stats(db: AsyncSession = Depends(get_db)):
+    """
+    📊 Returns top genres and their movie counts.
+    """
+    repo = MovieRepository(db)
+    stats = await repo.get_genre_statistics()
+    # Convert list of tuples to list of dicts for JSON
+    return [{"genre": row[0], "count": row[1]} for row in stats]
+
+
 @router.get("/{movie_id}", response_model=MovieResponse)
 async def read_movie(movie_id: int, db: AsyncSession = Depends(get_db)):
     stmt = select(Movie).options(selectinload(Movie.genres)).where(Movie.id == movie_id)
