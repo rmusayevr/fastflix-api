@@ -200,12 +200,12 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **DB Tuning**: Query analysis (`EXPLAIN ANALYZE`) and Index optimization.
 - [x] **Caching Strategy**: Redis Cache-Aside pattern for high-traffic reads.
 
-🤖 **Phase 12: AI & Semantic Search** (Days 88–92)
-- [ ] **Vector Database**: Enable `pgvector` & update Movie models.
-- [ ] **Embedding Pipeline**: Generate vector embeddings for Movie descriptions (HuggingFace).
-- [ ] **Semantic Search**: Implement "Search by Meaning" endpoint (Cosine Similarity).
-- [ ] **Recommendations**: "More Like This" engine based on vector distance.
-- [ ] **RAG**: "Chat with your Data" endpoint using a local LLM.
+✅ **Phase 12: AI & Semantic Search** (Days 88–92)
+- [x] **Vector Database**: Enable `pgvector` & update Movie models.
+- [x] **Embedding Pipeline**: Generate vector embeddings for Movie descriptions (HuggingFace).
+- [x] **Semantic Search**: Implement "Search by Meaning" endpoint (Cosine Similarity).
+- [x] **Recommendations**: "More Like This" engine based on vector distance.
+- [x] **RAG**: "Chat with your Data" endpoint using a local LLM.
 
 📊 **Phase 13: The Admin Dashboard** (Days 93–96)
 - [ ] **UI Framework**: Set up `Streamlit` for a Python-only frontend.
