@@ -33,8 +33,9 @@ from app.services.movie_service import (
 )
 from app.schemas.common import PageResponse
 from app.schemas.rating import RatingResponse, RatingCreate
-from app.services.watchlist_service import toggle_watchlist_service
+from app.services.ai_service import AIService
 from app.services.search_service import index_movie, remove_movie_from_index
+from app.services.watchlist_service import toggle_watchlist_service
 from app.tasks.notification_tasks import broadcast_notification_task
 
 router = APIRouter()
@@ -105,6 +106,27 @@ async def semantic_search(
     """
     repo = MovieRepository(db)
     return await repo.search_semantic(query, limit)
+
+
+@router.post("/chat")
+async def chat_with_movies(question: str, db: AsyncSession = Depends(get_db)):
+    """
+    🗣️ Ask a question about movies in the database.
+    """
+    repo = MovieRepository(db)
+
+    relevant_movies = await repo.search_semantic(question, limit=1)
+
+    if not relevant_movies:
+        return {"answer": "I couldn't find any movies relevant to your question."}
+
+    top_movie = relevant_movies[0]
+
+    context_text = f"Title: {top_movie.title}. Description: {top_movie.description}"
+
+    answer = AIService.generate_answer(context_text, question)
+
+    return {"question": question, "source_movie": top_movie.title, "answer": answer}
 
 
 @router.get("/{movie_id}", response_model=MovieResponse)

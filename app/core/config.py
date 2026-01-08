@@ -62,6 +62,8 @@ class Settings(BaseSettings):
 
     MEILI_HOST: str | None = None
     MEILI_MASTER_KEY: str | None = None
+    
+    ANTHROPIC_API_KEY: str | None = None
 
     @property
     def CELERY_BROKER_URL(self) -> str:
