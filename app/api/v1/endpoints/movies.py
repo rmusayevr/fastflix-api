@@ -29,7 +29,7 @@ from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.services.movie_service import (
     get_all_movies_service,
     rate_movie_service,
-    get_recommendations_service,
+    # get_recommendations_service,
 )
 from app.schemas.common import PageResponse
 from app.schemas.rating import RatingResponse, RatingCreate
@@ -245,9 +245,26 @@ async def toggle_watchlist(
     return await toggle_watchlist_service(current_user.id, movie_id, db)
 
 
+# @router.get("/{movie_id}/recommendations", response_model=List[MovieResponse])
+# async def get_movie_recommendations(
+#     movie_id: int,
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     return await get_recommendations_service(movie_id, db)
+
+
 @router.get("/{movie_id}/recommendations", response_model=List[MovieResponse])
-async def get_movie_recommendations(
-    movie_id: int,
-    db: AsyncSession = Depends(get_db),
+async def recommend_movies(
+    movie_id: int, limit: int = 5, db: AsyncSession = Depends(get_db)
 ):
-    return await get_recommendations_service(movie_id, db)
+    """
+    🍿 "More Like This"
+    Returns movies semantically similar to the given movie_id.
+    """
+    repo = MovieRepository(db)
+    recommendations = await repo.get_similar_movies(movie_id, limit)
+
+    if not recommendations:
+        return []
+
+    return recommendations

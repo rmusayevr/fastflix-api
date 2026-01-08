@@ -185,3 +185,26 @@ class MovieRepository:
 
         result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def get_similar_movies(self, movie_id: int, limit: int = 5):
+        """
+        Finds movies semantically similar to a specific movie ID.
+        """
+        stmt = select(Movie).where(Movie.id == movie_id)
+        result = await self.session.execute(stmt)
+        source_movie = result.scalars().first()
+
+        if not source_movie or source_movie.embedding is None:
+            return []
+
+        stmt = (
+            select(Movie)
+            .options(selectinload(Movie.genres))
+            .where(Movie.id != movie_id)
+            .where(Movie.embedding.is_not(None))
+            .order_by(Movie.embedding.cosine_distance(source_movie.embedding))
+            .limit(limit)
+        )
+
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
