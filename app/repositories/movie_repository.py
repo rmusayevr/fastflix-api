@@ -2,8 +2,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, asc, case, nullslast, or_
 from sqlalchemy.orm import aliased, selectinload
 from app.models.movie import Movie
-from app.schemas.movie import MovieCreate, MovieUpdate
 from app.models.rating import RatingModel
+from app.schemas.movie import MovieCreate, MovieUpdate
+from app.services.ai_service import get_embedding
 
 
 class MovieRepository:
@@ -170,4 +171,17 @@ class MovieRepository:
         )
 
         result = await self.session.execute(query)
+        return result.scalars().all()
+
+    async def search_semantic(self, query: str, limit: int = 5):
+        query_vector = get_embedding(query)
+
+        stmt = (
+            select(Movie)
+            .options(selectinload(Movie.genres))
+            .order_by(Movie.embedding.cosine_distance(query_vector))
+            .limit(limit)
+        )
+
+        result = await self.session.execute(stmt)
         return result.scalars().all()

@@ -24,6 +24,7 @@ from app.core.limiter import limiter
 from app.core.redis import get_redis_client
 from app.models.user import UserModel
 from app.models.movie import Movie, Genre
+from app.repositories.movie_repository import MovieRepository
 from app.schemas.movie import MovieResponse, MovieCreate, MovieUpdate
 from app.services.movie_service import (
     get_all_movies_service,
@@ -92,6 +93,18 @@ async def get_trending_movies(request: Request, db: AsyncSession = Depends(get_d
         return ordered_movies
 
     return []
+
+
+@router.get("/semantic_search", response_model=list[MovieResponse])
+async def semantic_search(
+    query: str, limit: int = 5, db: AsyncSession = Depends(get_db)
+):
+    """
+    🤖 Search movies by meaning.
+    E.g., "Movies about sad robots" -> Finds Wall-E.
+    """
+    repo = MovieRepository(db)
+    return await repo.search_semantic(query, limit)
 
 
 @router.get("/{movie_id}", response_model=MovieResponse)
