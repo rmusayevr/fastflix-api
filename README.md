@@ -14,19 +14,22 @@ graph TD
     LB --> API[FastAPI Cluster]
     
     subgraph Data Layer
-        API --> DB[(PostgreSQL Primary)]
+        API --> DB[(PostgreSQL + pgvector)]
         API --> Redis[(Redis Cache & Pub/Sub)]
+        API --> Search[(MeiliSearch Engine)]
+        API --> Storage[(MinIO Object Storage)]
     end
     
     subgraph Background Processing
         API -- "Async Tasks" --> Celery[Celery Workers]
         Beat[Celery Beat] -- "Scheduled Jobs" --> Celery
-        Celery --> Email[SMTP / SendGrid]
+        Celery --> Email[SMTP / Gmail]
     end
     
-    subgraph Real-Time
-        Redis -- "Pub/Sub Events" --> API
-        API -- "WebSockets" --> Client
+    subgraph Observability
+        Prometheus[Prometheus] -- "Scrapes Metrics" --> API
+        Grafana[Grafana] -- "Visualizes" --> Prometheus
+        Sentry[Sentry] -- "Error Tracking" --> API
     end
 ```
 
@@ -40,13 +43,19 @@ graph TD
 
 ## 🛠 Tech Stack
 - **Framework:** FastAPI
-- **Language:** Python 3.11+ (AsyncIO)
+- **Language:** Python 3.11+ (AsyncIO) with `pgvector`
 - **Database:** PostgreSQL 15 (Neon Serverless in Prod, Dockerized in Dev)
+- **Search Engine:** MeiliSearch (Typo-tolerance & Hybrid Search)
 - **ORM:** SQLAlchemy 2.0 (Async via `asyncpg`)
 - **Migrations:** Alembic
+- **Storage:** MinIO (S3 Compatible Object Storage)
+- **Background Tasks:** Celery + Redis
+- **Monitoring:** Prometheus & Grafana
+- **Error Tracking:** Sentry
+- **Admin Dashboard:** Streamlit
 - **Testing:** Pytest, HTTPX, Pytest-Asyncio
 - **CI/CD:** GitHub Actions (Linting & Automated Testing)
-- **Containerization:** Docker (Multi-stage builds)
+- **Containerization:** Docker & Docker Compose
 - **Production Server:** Gunicorn with Uvicorn workers
 
 ---
@@ -108,8 +117,9 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 ## 🎥 Core Features
 
 ### 🍿 Content Engine
-- **Search:** Native PostgreSQL Full-Text Search (TSVector) for high-speed queries.
-- **Recommendations:** "Trending Now" cache warmer and "Users also watched" collaborative filtering.
+- **Hybrid Search:** Combines `MeiliSearch` (typo-tolerance) and `PostgreSQL` (metadata) for sub-millisecond results.
+- **Semantic Search (AI):** Vector embeddings (`pgvector`) allow users to search by meaning (e.g., "sad movies about space") rather than just keywords.
+- **Recommendations:** "Trending Now" cache warmer and "More Like This" vector-based suggestions.
 - **Smart Loading:** Optimizations like Select-in-Loading to prevent N+1 query problems.
 
 ### ⚡ Real-Time & Background
@@ -118,12 +128,19 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - **Async Emails:** Welcome emails and alerts are offloaded to Celery workers (non-blocking).
 - **Scheduled Tasks:** Celery Beat runs weekly aggregation jobs to update the "Trending" cache.
 
+### 📊 Observability & Operations
+- **Metrics:** Real-time traffic, latency, and error rate monitoring via `Prometheus` & `Grafana`.
+- **Tracing:** Full stack trace capture for production errors using `Sentry`.
+- **Admin Dashboard:** A custom `Streamlit` interface for managing movies, users, and viewing analytics.
+
 ### 🔐 Security Features
 - **Authentication (OAuth2):** Stateless JWT authentication (Access & Refresh tokens).
 - **Authorization (RBAC):** Role-Based Access Control (Admin vs. User scopes).
 - **Cryptography:** Passwords hashed via `bcrypt` (using `passlib`).
 - **Dependencies:** `get_current_user` allows protecting routes with a single line of code.
 - **Rate Limiting:** Redis-backed throttling (e.g., "5 login attempts per minute").
+- **Hardening:** `TrustedHostMiddleware`, Rate Limiting (Redis), and strict Pydantic validation.
+
 
 ## 🗺️ Roadmap & Progress
 
@@ -213,11 +230,12 @@ Open `htmlcov/index.html` to view the coverage heatmap.
 - [x] **Movie Manager**: GUI to Add/Edit/Delete movies without using Postman.
 - [x] **AI Playground**: Visual tool to test Semantic Search results.
 
-🏁 **Phase 14: Final Polish**
-- [ ] **Documentation**: OpenAPI metadata, example responses & error codes.
-- [ ] **Load Testing**: High-concurrency stress testing (`Locust`).
-- [ ] **Code Quality**: Linting (`ruff`), Pre-commit hooks & Refactoring.
-- [ ] **Final Release**: Production deployment v1.0 & Retrospective.
+✅ **Phase 14: The Final Stretch (Days 97-100)**
+- [x] **Container Registry**: Push optimized images to Docker Hub (`rmusayevr/fastflix`).
+- [x] **CI/CD Pipeline**: GitHub Actions for automated testing and image building.
+- [x] **Production Hardening**: Security config sanitization and email TLS encryption.
+- [x] **Documentation**: OpenAPI metadata, tags, and professional descriptions.
+- [x] **Final Release**: Tagged `v1.0.0`, smoke-tested, and live.
 
 ## 📂 Project Structure
 ```
@@ -227,6 +245,7 @@ fastflix-api/
 ├── app/
 │   ├── api/            # Routes & Endpoints (v1)
 │   ├── core/           # Config, Security, OAuth, Celery & Exceptions
+│   ├── dashboard/      # Streamlit Admin Dashboard
 │   ├── db/             # Database session & Base models
 │   ├── models/         # SQLAlchemy Tables (Movies, Users, Ratings, RBAC)
 │   ├── repositories/   # DB Access Layer (Repository Pattern)
@@ -235,18 +254,19 @@ fastflix-api/
 │   ├── tasks/          # Background Workers (Celery + Redis)
 │   ├── templates/      # Jinja2 Templates (Emails)
 │   ├── utils/          # Utility functions (Storage, Helpers)
-│   ├── seed_rbac.py    # RBAC Database Seeder Script
 │   └── main.py         # Application Entrypoint (Instrumented)
 ├── prometheus/         # Monitoring Configuration
 │   ├── alert_rules.yml # Alert definitions (High Latency, Errors)
 │   └── prometheus.yml  # Prometheus scrape config
 ├── scripts/            # Management CLI & Data Importers
+├── static/             # Mounted static assets (Exports/Images)
 ├── tests/              # Pytest Suite (Unit, Integration, Load)
 ├── Dockerfile          # Multi-stage production build
-├── docker-compose.yml  # Orchestration (App, DB, Redis, MinIO, Prom, Grafana)
+├── docker-compose.yml       # Dev Orchestration
+├── docker-compose.prod.yml  # Production Orchestration
 ├── gunicorn_conf.py    # Production Process Manager config
 ├── prestart.sh         # Migration & startup automation script
-└── requirements.txt    # Dependencies (FastAPI, SQLA, Celery, Authlib)
+└── requirements.txt    # Dependencies
 ```
 
 **Live Demo:** https://fastflix-api-production.up.railway.app/docs

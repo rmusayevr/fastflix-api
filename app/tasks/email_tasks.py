@@ -11,15 +11,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATE_FOLDER = BASE_DIR / "templates"
 
 conf = ConnectionConfig(
-    MAIL_USERNAME=settings.SMTP_USER or "",
-    MAIL_PASSWORD=settings.SMTP_PASSWORD or "",
+    MAIL_USERNAME=settings.SMTP_USER,
+    MAIL_PASSWORD=settings.SMTP_PASSWORD,
     MAIL_FROM=settings.EMAILS_FROM_EMAIL,
     MAIL_PORT=settings.SMTP_PORT,
     MAIL_SERVER=settings.SMTP_HOST,
-    MAIL_STARTTLS=False,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=False,
-    VALIDATE_CERTS=False,
+    MAIL_STARTTLS=settings.SMTP_TLS,
+    MAIL_SSL_TLS=settings.SMTP_SSL,
+    USE_CREDENTIALS=True,
+    VALIDATE_CERTS=True,
 )
 
 

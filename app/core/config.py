@@ -44,12 +44,15 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str | None = None
     AWS_REGION: str = "us-east-1"
 
-    SMTP_HOST: str = "mailpit"
-    SMTP_PORT: int = 1025
+    SMTP_HOST: str
+    SMTP_PORT: int
     SMTP_USER: str | None = None
     SMTP_PASSWORD: str | None = None
-    EMAILS_FROM_EMAIL: str = "info@fastflix.com"
-    EMAILS_FROM_NAME: str = "FastFlix"
+    EMAILS_FROM_EMAIL: str
+    EMAILS_FROM_NAME: str
+
+    SMTP_TLS: bool = True
+    SMTP_SSL: bool = False
 
     FLOWER_ADMIN: str | None = None
     FLOWER_PASSWORD: str | None = None
