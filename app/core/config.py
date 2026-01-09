@@ -1,12 +1,13 @@
 from pydantic_settings import BaseSettings
-from typing import Literal, Optional, List
-from pydantic import field_validator, ValidationInfo, AnyHttpUrl
+from typing import Literal, List
+from functools import cached_property
 
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "FastFlix API"
     ENVIRONMENT: Literal["dev", "test", "prod"] = "dev"
     API_V1_STR: str = "/api/v1"
+    DOMAIN: str = "http://localhost:3000"
 
     # --- DATABASE ---
     POSTGRES_SERVER: str
@@ -20,9 +21,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
-    BACKEND_CORS_ORIGINS: List[str] = []
+
+    ALLOWED_HOSTS_RAW: str = "localhost,127.0.0.1,web"
+    BACKEND_CORS_ORIGINS_RAW: str = ""
 
     # --- INFRASTRUCTURE ---
     REDIS_HOST: str = "localhost"
@@ -54,66 +55,44 @@ class Settings(BaseSettings):
     FLOWER_PASSWORD: str | None = None
     SENTRY_DSN: str | None = None
     GF_SECURITY_ADMIN_PASSWORD: str | None = None
-    
-    DOMAIN: str = "http://localhost:3000"
+
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
-
     MEILI_HOST: str | None = None
     MEILI_MASTER_KEY: str | None = None
     ANTHROPIC_API_KEY: str | None = None
 
     @property
+    def DATABASE_URL(self) -> str:
+        url = (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:"
+            f"{self.POSTGRES_PASSWORD}@"
+            f"{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/"
+            f"{self.POSTGRES_DB}"
+        )
+        if self.ENVIRONMENT == "prod":
+            return f"{url}?ssl=require"
+        return url
+
+    @property
     def CELERY_BROKER_URL(self) -> str:
-        """Construct the Redis URL for Celery Broker"""
         if self.REDIS_URL:
             return self.REDIS_URL
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     @property
     def CELERY_RESULT_BACKEND(self) -> str:
-        """Construct the Redis URL for Celery Results"""
-        if self.REDIS_URL:
-            return self.REDIS_URL
-        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return self.CELERY_BROKER_URL
 
-    @property
-    def DATABASE_URL(self) -> str:
-        base_url = (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
-            f"{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
-        if self.ENVIRONMENT == "prod":
-            return f"{base_url}?ssl=require"
-        return base_url
+    @cached_property
+    def ALLOWED_HOSTS(self) -> List[str]:
+        return [h.strip() for h in self.ALLOWED_HOSTS_RAW.split(",") if h.strip()]
 
-    @field_validator("REDIS_URL", mode="before")
-    @classmethod
-    def assemble_redis_url(cls, v: Optional[str], info: ValidationInfo) -> str:
-        if isinstance(v, str) and v.strip():
-            return v
-
-        host = info.data.get("REDIS_HOST", "localhost")
-        port = info.data.get("REDIS_PORT", 6379)
-        db = info.data.get("REDIS_DB", 0)
-
-        return f"redis://{host}:{port}/{db}"
-
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v: str | List[str]) -> List[str] | str:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
-
-    @field_validator("ALLOWED_HOSTS", mode="before")
-    @classmethod
-    def assemble_allowed_hosts(cls, v: str | List[str]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        return v
+    @cached_property
+    def BACKEND_CORS_ORIGINS(self) -> List[str]:
+        return [
+            o.strip() for o in self.BACKEND_CORS_ORIGINS_RAW.split(",") if o.strip()
+        ]
 
     class Config:
         env_file = ".env"
